@@ -9,4 +9,16 @@
     <AspireUseCliBundle>true</AspireUseCliBundle>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\PoolCar.Fleet\PoolCar.Fleet.csproj" />
+    <ProjectReference Include="..\PoolCar.Reservations\PoolCar.Reservations.csproj" />
+    <ProjectReference Include="..\PoolCar.Simulator\PoolCar.Simulator.csproj" />
+    <ProjectReference Include="..\PoolCar.Web\PoolCar.Web.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Alanta.Aspire.Hosting.EasyAuthProxy" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+  </ItemGroup>
+
 </Project>
