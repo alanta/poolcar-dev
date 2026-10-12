@@ -1,0 +1,35 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="container py-4">
+    <h1>Hallo @Model.UserName</h1>
+
+    <div class="mt-4">
+        <dl class="row">
+            <dt class="col-sm-3">Naam</dt>
+            <dd class="col-sm-9">@Model.UserName</dd>
+
+            <dt class="col-sm-3">Object-ID</dt>
+            <dd class="col-sm-9">@Model.ObjectId</dd>
+
+            <dt class="col-sm-3">Rollen</dt>
+            <dd class="col-sm-9">
+                @if (Model.Roles.Count > 0)
+                {
+                    <span>@string.Join(", ", Model.Roles)</span>
+                }
+                else
+                {
+                    <span>Geen</span>
+                }
+            </dd>
+        </dl>
+    </div>
+
+    <div class="mt-4">
+        <p>Fleet: @Model.FleetStatus, Reservations: @Model.ReservationsStatus</p>
+    </div>
+</div>

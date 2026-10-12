@@ -1,10 +1,45 @@
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using PoolCar.Web.Auth;
+using PoolCar.Web.Clients;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 
-// Add services to the container.
-builder.Services.AddRazorPages();
+// Add typed API options and clients
+builder.Services.AddOptions<FleetApiOptions>()
+    .BindConfiguration("FleetApi")
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+builder.Services.AddOptions<ReservationsApiOptions>()
+    .BindConfiguration("ReservationsApi")
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+builder.Services.AddHttpClient<FleetClient>((sp, client) =>
+{
+    var options = sp.GetRequiredService<IOptions<FleetApiOptions>>().Value;
+    client.BaseAddress = options.BaseAddress;
+});
+
+builder.Services.AddHttpClient<ReservationsClient>((sp, client) =>
+{
+    var options = sp.GetRequiredService<IOptions<ReservationsApiOptions>>().Value;
+    client.BaseAddress = options.BaseAddress;
+});
+
+// Configure EasyAuth as default authentication scheme
+builder.Services.AddAuthentication(EasyAuthAuthenticationDefaults.AuthenticationScheme)
+    .AddEasyAuth();
+
+builder.Services.AddAuthorization();
+
+// Add services to the container and require authentication on all pages
+builder.Services.AddRazorPages(options =>
+{
+    options.Conventions.AuthorizeFolder("/");
+});
 
 var app = builder.Build();
 
@@ -20,6 +55,7 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
@@ -29,3 +65,6 @@ app.MapRazorPages()
 app.MapDefaultEndpoints();
 
 app.Run();
+
+public partial class Program;
+
