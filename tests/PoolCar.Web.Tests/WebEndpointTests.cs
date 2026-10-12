@@ -1,7 +1,9 @@
 using System.Net;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using PoolCar.Web.Auth;
 using PoolCar.Web.Clients;
 
@@ -136,6 +138,57 @@ public class WebEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.Contains("3fa85f64-5717-4562-b3fc-2c963f66afa6", html);
         Assert.Contains("FleetOperator", html);
         Assert.Contains("Fleet: ok, Reservations: ok", html);
+        Assert.Contains("<html lang=\"nl\">", html);
+        Assert.Contains("name=\"request-verification-token\"", html);
+        Assert.Contains("hx-boost=\"true\"", html);
+        Assert.Contains("RequestVerificationToken", html);
+        Assert.Contains("htmx", html);
+        Assert.Contains("Thuislocatie niet ingesteld", html);
+        Assert.Contains("Afmelden", html);
+        Assert.Contains("Balie", html);
+    }
+
+    [Fact]
+    public async Task StaticAssets_ServePinnedHtmxAndInterFont()
+    {
+        using var client = _factory.CreateClient();
+
+        using var tokensResponse = await client.GetAsync("/css/tokens.css", TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.OK, tokensResponse.StatusCode);
+        var tokens = await tokensResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        Assert.Contains("--color-black: #1A1A1A;", tokens);
+        Assert.Contains("--color-blue-700: #037F91;", tokens);
+        Assert.Contains("--color-success: #219653;", tokens);
+
+        using var siteStylesResponse = await client.GetAsync(
+            "/css/site.css",
+            TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.OK, siteStylesResponse.StatusCode);
+        var siteStyles = await siteStylesResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        Assert.Contains("font-family: Inter", siteStyles);
+
+        using var htmxResponse = await client.GetAsync(
+            "/lib/htmx/htmx-2.0.11.min.js",
+            TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.OK, htmxResponse.StatusCode);
+        var htmx = await htmxResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        Assert.StartsWith("var htmx=", htmx);
+
+        using var fontResponse = await client.GetAsync(
+            "/fonts/InterVariable.woff2",
+            TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.OK, fontResponse.StatusCode);
+        Assert.True(fontResponse.Content.Headers.ContentLength > 0);
+    }
+
+    [Fact]
+    public void RequestLocalization_UsesDutchCulture()
+    {
+        var options = _factory.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>().Value;
+
+        Assert.Equal("nl-NL", options.DefaultRequestCulture.Culture.Name);
+        Assert.Equal("nl-NL", options.SupportedCultures?.Single().Name);
+        Assert.Equal("nl-NL", options.SupportedUICultures?.Single().Name);
     }
 
     private sealed class TestHealthHandler : HttpMessageHandler

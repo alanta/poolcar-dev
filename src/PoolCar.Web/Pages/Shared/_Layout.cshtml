@@ -1,51 +1,75 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    var pageTitle = ViewData["Title"] as string;
+    var requestToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
+}
+<!DOCTYPE html>
+<html lang="nl">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - PoolCar.Web</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/PoolCar.Web.styles.css" asp-append-version="true" />
+    <meta name="request-verification-token" content="@requestToken" />
+    <title>@(string.IsNullOrWhiteSpace(pageTitle) ? "PoolCar" : $"{pageTitle} | PoolCar")</title>
+    <link rel="preload" href="~/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="~/css/tokens.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <script src="~/lib/htmx/htmx-2.0.11.min.js" defer></script>
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">PoolCar.Web</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
-                        </li>
-                    </ul>
+<body hx-boost="true" hx-headers='{"RequestVerificationToken": "@requestToken"}'>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" asp-page="/Index" aria-label="PoolCar, overzicht">PoolCar</a>
+
+            <form class="plate-search" action="/auto" method="get" role="search">
+                <label class="visually-hidden" for="plate-search">Zoek een auto op kenteken</label>
+                <input id="plate-search" name="kenteken" type="search" placeholder="Kenteken zoeken" autocomplete="off" />
+                <button type="submit">Zoek</button>
+            </form>
+
+            <section class="user-menu" aria-label="Gebruikersmenu">
+                <div class="user-identity">
+                    <span class="user-name">@(User.GetName() ?? "Medewerker")</span>
+                    <span class="user-office">Thuislocatie niet ingesteld</span>
                 </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - PoolCar.Web - <a asp-area="" asp-page="/Privacy">Privacy</a>
+                <a class="sign-out" href="/.auth/logout">Afmelden</a>
+            </section>
         </div>
-    </footer>
+    </header>
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <nav class="site-navigation" aria-label="Hoofdnavigatie">
+        <ul class="navigation-inner">
+            <li><span>Reserveren</span></li>
+            <li><span>Nu een auto</span></li>
+            <li><span>Mijn reserveringen</span></li>
+            <li class="navigation-desktop-secondary"><span>Planning</span></li>
+            <li class="navigation-desktop-secondary"><span>Wagenpark</span></li>
+            @if (User.IsOperator())
+            {
+                <li class="navigation-operator"><span>Balie</span></li>
+            }
+            <li class="navigation-mobile-more">
+                <details>
+                    <summary>Meer</summary>
+                    <ul class="mobile-more-menu">
+                        <li><span>Planning</span></li>
+                        <li><span>Wagenpark</span></li>
+                        @if (User.IsOperator())
+                        {
+                            <li><span>Balie</span></li>
+                        }
+                    </ul>
+                </details>
+            </li>
+        </ul>
+    </nav>
+
+    <main id="main-content" class="site-main" tabindex="-1">
+        @RenderBody()
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-inner">PoolCar</div>
+    </footer>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

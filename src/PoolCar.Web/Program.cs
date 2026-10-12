@@ -1,3 +1,5 @@
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using PoolCar.Web.Auth;
@@ -35,6 +37,19 @@ builder.Services.AddAuthentication(EasyAuthAuthenticationDefaults.Authentication
 
 builder.Services.AddAuthorization();
 
+var dutchCulture = new CultureInfo("nl-NL");
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    options.DefaultRequestCulture = new RequestCulture(dutchCulture);
+    options.SupportedCultures = [dutchCulture];
+    options.SupportedUICultures = [dutchCulture];
+});
+
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "RequestVerificationToken";
+});
+
 // Add services to the container and require authentication on all pages
 builder.Services.AddRazorPages(options =>
 {
@@ -53,6 +68,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseRequestLocalization();
+
 app.UseRouting();
 
 app.UseAuthentication();
@@ -67,4 +84,3 @@ app.MapDefaultEndpoints();
 app.Run();
 
 public partial class Program;
-
