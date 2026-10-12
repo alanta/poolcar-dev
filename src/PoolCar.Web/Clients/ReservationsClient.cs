@@ -6,10 +6,10 @@ public class ReservationsClient(HttpClient httpClient)
     {
         try
         {
-            var response = await httpClient.GetAsync("/health", cancellationToken);
+            using var response = await httpClient.GetAsync("/health", cancellationToken);
             return response.IsSuccessStatusCode ? "ok" : "error";
         }
-        catch
+        catch (HttpRequestException)
         {
             return "error";
         }

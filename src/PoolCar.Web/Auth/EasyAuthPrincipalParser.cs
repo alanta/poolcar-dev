@@ -29,7 +29,11 @@ public static class EasyAuthPrincipalParser
 
             return CreatePrincipal(payload);
         }
-        catch
+        catch (FormatException)
+        {
+            return null;
+        }
+        catch (JsonException)
         {
             return null;
         }

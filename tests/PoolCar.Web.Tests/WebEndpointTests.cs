@@ -1,5 +1,6 @@
 using System.Net;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
 using PoolCar.Web.Auth;
 using PoolCar.Web.Clients;
@@ -30,7 +31,9 @@ public class WebEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         // Assert
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.NotNull(response.Headers.Location);
-        Assert.Equal("/.auth/login/aad?post_login_redirect_uri=/", response.Headers.Location.ToString());
+        var redirect = new Uri(new Uri("https://localhost"), response.Headers.Location);
+        var query = QueryHelpers.ParseQuery(redirect.Query);
+        Assert.Equal("/", query["post_login_redirect_uri"]);
     }
 
     [Fact]
@@ -48,7 +51,30 @@ public class WebEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         // Assert
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.NotNull(response.Headers.Location);
-        Assert.Equal("/.auth/login/aad?post_login_redirect_uri=/?param=value", response.Headers.Location.ToString());
+        var redirect = new Uri(new Uri("https://localhost"), response.Headers.Location);
+        var query = QueryHelpers.ParseQuery(redirect.Query);
+        Assert.Equal("/?param=value", query["post_login_redirect_uri"]);
+    }
+
+    [Fact]
+    public async Task AnonymousRequest_WithAmpersandInQuery_KeepsReturnPathAsSingleParameter()
+    {
+        // Arrange
+        using var client = _factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false
+        });
+
+        // Act
+        using var response = await client.GetAsync("/?param=value&next=other", TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.NotNull(response.Headers.Location);
+        var redirect = new Uri(new Uri("https://localhost"), response.Headers.Location);
+        var query = QueryHelpers.ParseQuery(redirect.Query);
+        Assert.Equal("/?param=value&next=other", query["post_login_redirect_uri"]);
+        Assert.False(query.ContainsKey("next"));
     }
 
     [Fact]

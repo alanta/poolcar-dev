@@ -1,5 +1,6 @@
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -43,7 +44,7 @@ public class EasyAuthAuthenticationHandler : AuthenticationHandler<Authenticatio
             path = "/";
         }
 
-        var redirectUrl = $"/.auth/login/aad?post_login_redirect_uri={path}";
+        var redirectUrl = QueryHelpers.AddQueryString("/.auth/login/aad", "post_login_redirect_uri", path);
         Response.Redirect(redirectUrl);
         return Task.CompletedTask;
     }
