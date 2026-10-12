@@ -1,2 +1,17 @@
 <Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PoolCar.AppHost/PoolCar.AppHost.csproj" />
+    <Project Path="src/PoolCar.Fleet/PoolCar.Fleet.csproj" />
+    <Project Path="src/PoolCar.Reservations/PoolCar.Reservations.csproj" />
+    <Project Path="src/PoolCar.ServiceDefaults/PoolCar.ServiceDefaults.csproj" />
+    <Project Path="src/PoolCar.Simulator/PoolCar.Simulator.csproj" />
+    <Project Path="src/PoolCar.Web/PoolCar.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PoolCar.ArchitectureTests/PoolCar.ArchitectureTests.csproj" />
+    <Project Path="tests/PoolCar.EndToEnd.Tests/PoolCar.EndToEnd.Tests.csproj" />
+    <Project Path="tests/PoolCar.Fleet.Tests/PoolCar.Fleet.Tests.csproj" />
+    <Project Path="tests/PoolCar.Reservations.Tests/PoolCar.Reservations.Tests.csproj" />
+    <Project Path="tests/PoolCar.Web.Tests/PoolCar.Web.Tests.csproj" />
+  </Folder>
 </Solution>
