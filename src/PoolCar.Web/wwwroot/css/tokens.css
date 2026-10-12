@@ -1,0 +1,18 @@
+﻿:root {
+    color-scheme: light;
+    --color-black: #1A1A1A;
+    --color-white: #FFFFFF;
+    --color-grey-100: #F3F3F2;
+    --color-grey-200: #D9D9D6;
+    --color-grey-600: #666666;
+    --color-grey-800: #333333;
+    --color-red-500: #DE1E05;
+    --color-red-400: #FB523C;
+    --color-red-300: #FC8C7D;
+    --color-blue-500: #70CAD1;
+    --color-blue-700: #037F91;
+    --color-blue-100: #BEF6FE;
+    --color-pink: #FBC1D4;
+    --color-yellow: #C5DE05;
+    --color-success: #219653;
+}

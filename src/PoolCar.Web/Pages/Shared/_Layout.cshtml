@@ -1,0 +1,76 @@
+﻿@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    var pageTitle = ViewData["Title"] as string;
+    var requestToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
+}
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="request-verification-token" content="@requestToken" />
+    <title>@(string.IsNullOrWhiteSpace(pageTitle) ? "PoolCar" : $"{pageTitle} | PoolCar")</title>
+    <link rel="preload" href="~/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="~/css/tokens.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <script src="~/lib/htmx/htmx-2.0.11.min.js" defer></script>
+</head>
+<body hx-boost="true" hx-headers='{"RequestVerificationToken": "@requestToken"}'>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" asp-page="/Index" aria-label="PoolCar, overzicht">PoolCar</a>
+
+            <form class="plate-search" action="/auto" method="get" role="search">
+                <label class="visually-hidden" for="plate-search">Zoek een auto op kenteken</label>
+                <input id="plate-search" name="kenteken" type="search" placeholder="Kenteken zoeken" autocomplete="off" />
+                <button type="submit">Zoek</button>
+            </form>
+
+            <section class="user-menu" aria-label="Gebruikersmenu">
+                <div class="user-identity">
+                    <span class="user-name">@(User.GetName() ?? "Medewerker")</span>
+                    <span class="user-office">Thuislocatie niet ingesteld</span>
+                </div>
+                <a class="sign-out" href="/.auth/logout">Afmelden</a>
+            </section>
+        </div>
+    </header>
+
+    <nav class="site-navigation" aria-label="Hoofdnavigatie">
+        <ul class="navigation-inner">
+            <li><span>Reserveren</span></li>
+            <li><span>Nu een auto</span></li>
+            <li><span>Mijn reserveringen</span></li>
+            <li class="navigation-desktop-secondary"><span>Planning</span></li>
+            <li class="navigation-desktop-secondary"><span>Wagenpark</span></li>
+            @if (User.IsOperator())
+            {
+                <li class="navigation-operator"><span>Balie</span></li>
+            }
+            <li class="navigation-mobile-more">
+                <details>
+                    <summary>Meer</summary>
+                    <ul class="mobile-more-menu">
+                        <li><span>Planning</span></li>
+                        <li><span>Wagenpark</span></li>
+                        @if (User.IsOperator())
+                        {
+                            <li><span>Balie</span></li>
+                        }
+                    </ul>
+                </details>
+            </li>
+        </ul>
+    </nav>
+
+    <main id="main-content" class="site-main" tabindex="-1">
+        @RenderBody()
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-inner">PoolCar</div>
+    </footer>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

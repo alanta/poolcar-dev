@@ -1,0 +1,31 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Overzicht";
+}
+
+<div class="container home-page">
+    <h1>Hallo @Model.UserName</h1>
+
+    <dl class="profile-details">
+        <dt>Naam</dt>
+        <dd>@Model.UserName</dd>
+
+        <dt>Object-ID</dt>
+        <dd>@Model.ObjectId</dd>
+
+        <dt>Rollen</dt>
+        <dd>
+            @if (Model.Roles.Count > 0)
+            {
+                <span>@string.Join(", ", Model.Roles)</span>
+            }
+            else
+            {
+                <span>Geen</span>
+            }
+        </dd>
+    </dl>
+
+    <p class="service-health" role="status">Fleet: @Model.FleetStatus, Reservations: @Model.ReservationsStatus</p>
+</div>
