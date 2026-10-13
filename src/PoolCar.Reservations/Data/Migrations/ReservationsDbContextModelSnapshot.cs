@@ -86,12 +86,6 @@ namespace PoolCar.Reservations.Data.Migrations
                         .HasColumnType("date")
                         .HasColumnName("from_date");
 
-                    b.Property<string>("Source")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("source");
-
                     b.Property<DateOnly>("ToDate")
                         .HasColumnType("date")
                         .HasColumnName("to_date");

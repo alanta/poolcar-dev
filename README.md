@@ -30,7 +30,7 @@ The Reservations service stores employees and their bookings in PostgreSQL. Requ
 | --- | --- |
 | `GET /employees/{id}` | An employee, or `404`. |
 | `PUT /employees/{id}` | Creates or updates an employee's name and home office. |
-| `POST /reservations` | Reserves a car (`carId`, `from`, `to`, `dayPart`, optional `source`) for at most 14 dates. |
+| `POST /reservations` | Reserves a car (`carId`, `from`, `to`, `dayPart`) for at most 14 dates. |
 | `POST /reservations/now` | Reserves a car from now until the end of the current day part and picks it up. |
 | `GET /reservations/mine` | The acting employee's reservations of the last 30 days and the future. |
 | `GET /reservations/{id}` | A reservation with its periods, or `404`. |
@@ -75,12 +75,6 @@ aspire run
 ```
 
 Open the EasyAuth development proxy at <http://localhost:5000>. On the sign-in form, enter a demo username such as `demo@example.test`; the user ID can be left at its generated value. Enter `FleetOperator` in Roles to try the operator view.
-
-The Simulator is visible in the Aspire dashboard but does not start by default. To start it, pass `Simulator:Enabled=true` to the AppHost:
-
-```sh
-aspire run -- --Simulator:Enabled=true
-```
 
 ## Seeded employees
 

@@ -18,7 +18,6 @@ public sealed class Reservation
         DateOnly fromDate,
         DateOnly toDate,
         DayPart dayPart,
-        ReservationSource source,
         DateTimeOffset createdAt)
     {
         Id = Guid.NewGuid();
@@ -27,7 +26,6 @@ public sealed class Reservation
         FromDate = fromDate;
         ToDate = toDate;
         DayPart = dayPart;
-        Source = source;
         CreatedAt = createdAt;
     }
 
@@ -44,8 +42,6 @@ public sealed class Reservation
 
     public DayPart DayPart { get; private set; }
 
-    public ReservationSource Source { get; private set; }
-
     public DateTimeOffset CreatedAt { get; private set; }
 
     public DateTimeOffset? CancelledAt { get; private set; }
@@ -60,7 +56,6 @@ public sealed class Reservation
         DateOnly fromDate,
         DateOnly toDate,
         DayPart dayPart,
-        ReservationSource source,
         DateTimeOffset now)
     {
         var error = Validate(employeeId, carId, dayPart);
@@ -79,7 +74,7 @@ public sealed class Reservation
             return DomainError.Invalid($"Je kan maximaal {MaxDays} dagen reserveren.");
         }
 
-        var reservation = new Reservation(employeeId, carId, fromDate, toDate, dayPart, source, now);
+        var reservation = new Reservation(employeeId, carId, fromDate, toDate, dayPart, now);
         for (var date = fromDate; date <= toDate; date = date.AddDays(1))
         {
             var (start, end) = DayParts.ToPeriod(date, dayPart);
@@ -94,7 +89,6 @@ public sealed class Reservation
     public static Result<Reservation> BookNow(
         Guid employeeId,
         string carId,
-        ReservationSource source,
         DateTimeOffset now)
     {
         if (DayParts.CurrentDayPart(now) is not { } dayPart)
@@ -119,7 +113,7 @@ public sealed class Reservation
             return pickUp.Error;
         }
 
-        var reservation = new Reservation(employeeId, carId, date, date, dayPart, source, now);
+        var reservation = new Reservation(employeeId, carId, date, date, dayPart, now);
         reservation._periods.Add(period);
         return reservation;
     }

@@ -289,7 +289,7 @@ public partial class BaliePageTests(WebApplicationFactory<Program> factory) : IC
 
     private static string Reservation(string carId) => $$"""
         {"id":"{{Guid.NewGuid()}}","employeeId":"{{Guid.NewGuid()}}","carId":"{{carId}}","from":"2026-10-14","to":"2026-10-14",
-         "dayPart":"Morning","source":"User","createdAt":"2026-10-10T08:00:00+00:00","cancelledAt":null,
+         "dayPart":"Morning","createdAt":"2026-10-10T08:00:00+00:00","cancelledAt":null,
          "notPickedUp":false,"overdue":false,"periods":[]}
         """;
 
@@ -314,7 +314,7 @@ public partial class BaliePageTests(WebApplicationFactory<Program> factory) : IC
         return $$"""
             {"reservationId":"{{Guid.NewGuid()}}","periodId":"{{periodId}}","carId":"{{carId}}",
              "date":"{{date}}","dayPart":"{{dayPart}}","start":"{{date}}T{{start}}:00+00:00","end":"{{date}}T{{end}}:00+00:00",
-             "status":"{{status}}","source":"User","employeeFirstName":"{{firstName}}",
+             "status":"{{status}}","employeeFirstName":"{{firstName}}",
              "notPickedUp":{{Json(notPickedUp)}},"overdue":{{Json(overdue)}},"atRisk":{{Json(atRisk)}}}
             """;
     }

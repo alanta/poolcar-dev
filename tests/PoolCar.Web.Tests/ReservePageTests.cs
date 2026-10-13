@@ -211,7 +211,7 @@ public partial class ReservePageTests(WebApplicationFactory<Program> factory) : 
         html.ShouldContain("hx-swap-oob=\"beforeend:#toasts\"");
         html.ShouldContain("Renault 5 AA-11-BB is gereserveerd.");
         var post = _reservations.Requests.Where(r => r.Method == HttpMethod.Post && r.Uri.AbsolutePath == "/reservations").ShouldHaveSingleItem();
-        post.Body.ShouldBe("""{"carId":"AA11BB","from":"2026-10-14","to":"2026-10-14","dayPart":"Morning","source":null}""");
+        post.Body.ShouldBe("""{"carId":"AA11BB","from":"2026-10-14","to":"2026-10-14","dayPart":"Morning"}""");
     }
 
     [Fact]
@@ -363,14 +363,14 @@ public partial class ReservePageTests(WebApplicationFactory<Program> factory) : 
 
     private static string ReservationJson(string plate) => $$"""
         {"id":"{{ReservationId}}","employeeId":"{{TestPrincipals.KnownId}}","carId":"{{plate}}",
-         "from":"2026-10-14","to":"2026-10-14","dayPart":"Morning","source":"User",
+         "from":"2026-10-14","to":"2026-10-14","dayPart":"Morning",
          "createdAt":"2026-10-13T09:00:00+00:00","cancelledAt":null,"notPickedUp":false,"overdue":false,"periods":[]}
         """;
 
     private static string ScheduleJson(string date, string dayPart) => $$"""
         [{"reservationId":"{{ReservationId}}","periodId":"22222222-2222-2222-2222-222222222222","carId":"HPN72V",
           "date":"{{date}}","dayPart":"{{dayPart}}","start":"{{date}}T06:00:00+00:00","end":"{{date}}T10:00:00+00:00",
-          "status":"Scheduled","source":"User","employeeFirstName":"Fleur","notPickedUp":false,"overdue":false,"atRisk":false}]
+          "status":"Scheduled","employeeFirstName":"Fleur","notPickedUp":false,"overdue":false,"atRisk":false}]
         """;
 
     private static string TileHtml(string html, string name)

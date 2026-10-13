@@ -1,13 +1,12 @@
 # PoolCar agent guide
 
-PoolCar is an internal shared-car application. Web is the authenticated user entry point, Fleet owns fleet data, Reservations owns booking data, and Simulator is a client of both APIs. Aspire AppHost wires the local services and PostgreSQL.
+PoolCar is an internal shared-car application. Web is the authenticated user entry point, Fleet owns fleet data, and Reservations owns booking data. Aspire AppHost wires the local services and PostgreSQL.
 
 ## Layout
 
 - `src/PoolCar.Web/` — Razor Pages UI, EasyAuth integration, and API clients. Web combines data from Fleet and Reservations.
 - `src/PoolCar.Fleet/` — Fleet API.
 - `src/PoolCar.Reservations/` — Reservations API.
-- `src/PoolCar.Simulator/` — Simulator client.
 - `src/PoolCar.AppHost/` — local Aspire resources and service wiring.
 - `src/PoolCar.ServiceDefaults/` — shared telemetry, resilience, and health checks.
 - `tests/PoolCar.*.Tests/` — unit, API, web, and end-to-end tests.

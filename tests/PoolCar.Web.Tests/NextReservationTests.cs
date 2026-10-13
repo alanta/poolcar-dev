@@ -63,7 +63,6 @@ public class NextReservationTests
         DateOnly.FromDateTime(periods[0].Start.Date),
         DateOnly.FromDateTime(periods[^1].Start.Date),
         DayPart.Morning,
-        ReservationSource.User,
         Now.AddDays(-1),
         null,
         false,

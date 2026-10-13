@@ -13,7 +13,7 @@ public class ReservationStoreTests(ReservationsDatabase database) : IClassFixtur
     private async Task<Reservation> CreateReservationAsync(string carId, DateOnly from, DateOnly to, DayPart part)
     {
         var employee = await database.AddEmployeeAsync();
-        return Reservation.Create(employee.Id, carId, from, to, part, ReservationSource.User, s_now).Value!;
+        return Reservation.Create(employee.Id, carId, from, to, part, s_now).Value!;
     }
 
     [Fact]

@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Configuration;
-
 var builder = DistributedApplication.CreateBuilder(args);
 
 var postgres = builder.AddPostgres("postgres")
@@ -22,18 +20,6 @@ var web = builder.AddProject<Projects.PoolCar_Web>("web")
     .WithHttpHealthCheck("/health")
     .WaitFor(fleet)
     .WaitFor(reservations);
-var simulator = builder.AddProject<Projects.PoolCar_Simulator>("simulator")
-    .WithReference(fleet)
-    .WithReference(reservations)
-    .WithEnvironment("FleetApi__BaseAddress", fleet.GetEndpoint("http"))
-    .WithEnvironment("ReservationsApi__BaseAddress", reservations.GetEndpoint("http"))
-    .WaitFor(fleet)
-    .WaitFor(reservations);
-
-if (!builder.Configuration.GetValue<bool>("Simulator:Enabled"))
-{
-    simulator.WithExplicitStart();
-}
 
 builder.AddEasyAuthProxy("easyauth")
     .WithBackend(web)

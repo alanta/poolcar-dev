@@ -14,10 +14,9 @@ public sealed record CreateReservationRequest(
     string CarId,
     DateOnly From,
     DateOnly To,
-    DayPart DayPart,
-    ReservationSource? Source = null);
+    DayPart DayPart);
 
-public sealed record BookNowRequest(string CarId, ReservationSource? Source = null);
+public sealed record BookNowRequest(string CarId);
 
 public sealed record PeriodResponse(
     Guid Id,
@@ -49,7 +48,6 @@ public sealed record ReservationResponse(
     DateOnly From,
     DateOnly To,
     DayPart DayPart,
-    ReservationSource Source,
     DateTimeOffset CreatedAt,
     DateTimeOffset? CancelledAt,
     bool NotPickedUp,
@@ -70,7 +68,6 @@ public sealed record ReservationResponse(
             reservation.FromDate,
             reservation.ToDate,
             reservation.DayPart,
-            reservation.Source,
             reservation.CreatedAt,
             reservation.CancelledAt,
             periods.Any(p => p.NotPickedUp),
@@ -96,7 +93,6 @@ public sealed record ScheduleEntryResponse(
     DateTimeOffset Start,
     DateTimeOffset End,
     PeriodStatus Status,
-    ReservationSource Source,
     string EmployeeFirstName,
     bool NotPickedUp,
     bool Overdue,

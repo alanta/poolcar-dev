@@ -17,7 +17,6 @@ public sealed class ReservationsDbContext(DbContextOptions<ReservationsDbContext
         configurationBuilder.Properties<DayPart>().HaveConversion<string>().HaveMaxLength(20);
         configurationBuilder.Properties<EmployeeKind>().HaveConversion<string>().HaveMaxLength(20);
         configurationBuilder.Properties<PeriodStatus>().HaveConversion<string>().HaveMaxLength(20);
-        configurationBuilder.Properties<ReservationSource>().HaveConversion<string>().HaveMaxLength(20);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) =>

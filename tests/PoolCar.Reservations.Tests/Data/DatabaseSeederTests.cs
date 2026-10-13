@@ -89,7 +89,6 @@ public class DatabaseSeederTests(PostgresFixture postgres)
 
         all.Where(r => NeverBooked.Contains(r.Car)).ShouldBeEmpty();
         all.Select(r => r.Car).Distinct().Count().ShouldBeGreaterThan(30);
-        all.ShouldAllBe(r => r.Reservation.Source == ReservationSource.User);
     }
 
     [Fact]
@@ -121,7 +120,7 @@ public class DatabaseSeederTests(PostgresFixture postgres)
     {
         var ct = TestContext.Current.CancellationToken;
         var time = Clock();
-        var results = new List<List<(string, string, DateOnly, DateOnly, DayPart, Guid)>>();
+        var results = new List<List<(string, DateOnly, DateOnly, DayPart, Guid)>>();
 
         for (var i = 0; i < 2; i++)
         {
@@ -133,7 +132,7 @@ public class DatabaseSeederTests(PostgresFixture postgres)
 
             await using var verify = database.CreateContext();
             results.Add((await LoadAsync(verify, ct))
-                .Select(r => (r.Car, r.Reservation.Source.ToString(), r.Reservation.FromDate, r.Reservation.ToDate, r.Reservation.DayPart, r.Reservation.EmployeeId))
+                .Select(r => (r.Car, r.Reservation.FromDate, r.Reservation.ToDate, r.Reservation.DayPart, r.Reservation.EmployeeId))
                 .Order()
                 .ToList());
         }

@@ -208,7 +208,6 @@ public class ReservationOverviewTests
         periods[0].Date,
         periods[0].Date,
         DayPart.Morning,
-        ReservationSource.User,
         Now.AddDays(-3),
         null,
         periods.Any(p => p.NotPickedUp),

@@ -99,7 +99,6 @@ public class CarWeekTests
         var start = new DateTimeOffset(date.ToDateTime(DayPartText.Start(dayPart).AddHours(-2)), TimeSpan.Zero);
         var end = new DateTimeOffset(date.ToDateTime(DayPartText.End(dayPart).AddHours(-2)), TimeSpan.Zero);
         return new ScheduleEntry(
-            reservationId, Guid.NewGuid(), "HPN72V", date, dayPart, start, end, status, ReservationSource.User,
-            "Anna", false, overdue, false);
+            reservationId, Guid.NewGuid(), "HPN72V", date, dayPart, start, end, status, "Anna", false, overdue, false);
     }
 }

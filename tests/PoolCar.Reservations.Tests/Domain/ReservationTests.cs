@@ -12,7 +12,7 @@ public class ReservationTests
 
     private Reservation CreateReservation(DateOnly from, DateOnly to, DayPart part = DayPart.FullDay)
     {
-        var result = Reservation.Create(s_employeeId, "HPN72V", from, to, part, ReservationSource.User, _time.GetUtcNow());
+        var result = Reservation.Create(s_employeeId, "HPN72V", from, to, part, _time.GetUtcNow());
         result.IsSuccess.ShouldBeTrue();
         return result.Value;
     }
@@ -28,7 +28,6 @@ public class ReservationTests
         reservation.FromDate.ShouldBe(s_friday);
         reservation.ToDate.ShouldBe(s_friday);
         reservation.DayPart.ShouldBe(DayPart.Morning);
-        reservation.Source.ShouldBe(ReservationSource.User);
         reservation.CreatedAt.ShouldBe(_time.GetUtcNow());
     }
 
@@ -71,8 +70,7 @@ public class ReservationTests
     public void Create_refuses_fifteen_days()
     {
         var result = Reservation.Create(
-            s_employeeId, "HPN72V", s_friday, s_friday.AddDays(14), DayPart.FullDay, ReservationSource.User,
-            _time.GetUtcNow());
+            s_employeeId, "HPN72V", s_friday, s_friday.AddDays(14), DayPart.FullDay, _time.GetUtcNow());
 
         result.Error.ShouldNotBeNull().Code.ShouldBe(DomainError.InvalidCode);
     }
@@ -81,8 +79,7 @@ public class ReservationTests
     public void Create_refuses_from_date_after_to_date()
     {
         var result = Reservation.Create(
-            s_employeeId, "HPN72V", s_friday, s_friday.AddDays(-1), DayPart.FullDay, ReservationSource.User,
-            _time.GetUtcNow());
+            s_employeeId, "HPN72V", s_friday, s_friday.AddDays(-1), DayPart.FullDay, _time.GetUtcNow());
 
         result.Error.ShouldNotBeNull().Code.ShouldBe(DomainError.InvalidCode);
     }
@@ -91,7 +88,7 @@ public class ReservationTests
     public void Create_refuses_missing_car()
     {
         var result = Reservation.Create(
-            s_employeeId, " ", s_friday, s_friday, DayPart.FullDay, ReservationSource.User, _time.GetUtcNow());
+            s_employeeId, " ", s_friday, s_friday, DayPart.FullDay, _time.GetUtcNow());
 
         result.Error.ShouldNotBeNull().Code.ShouldBe(DomainError.InvalidCode);
     }
@@ -100,7 +97,7 @@ public class ReservationTests
     public void Create_refuses_unknown_day_part()
     {
         var result = Reservation.Create(
-            s_employeeId, "HPN72V", s_friday, s_friday, (DayPart)42, ReservationSource.User, _time.GetUtcNow());
+            s_employeeId, "HPN72V", s_friday, s_friday, (DayPart)42, _time.GetUtcNow());
 
         result.Error.ShouldNotBeNull().Code.ShouldBe(DomainError.InvalidCode);
     }
@@ -158,7 +155,7 @@ public class ReservationTests
         _time.SetUtcNow(new DateTimeOffset(2026, 10, 14, 9, 0, 42, TimeSpan.Zero));
         var now = _time.GetUtcNow();
 
-        var result = Reservation.BookNow(s_employeeId, "HPN72V", ReservationSource.User, now);
+        var result = Reservation.BookNow(s_employeeId, "HPN72V", now);
 
         result.IsSuccess.ShouldBeTrue();
         var reservation = result.Value;
@@ -180,11 +177,10 @@ public class ReservationTests
         _time.SetUtcNow(new DateTimeOffset(2026, 10, 14, 13, 0, 0, TimeSpan.Zero));
         var now = _time.GetUtcNow();
 
-        var result = Reservation.BookNow(s_employeeId, "HPN72V", ReservationSource.Simulator, now);
+        var result = Reservation.BookNow(s_employeeId, "HPN72V", now);
 
         result.IsSuccess.ShouldBeTrue();
         result.Value.DayPart.ShouldBe(DayPart.Afternoon);
-        result.Value.Source.ShouldBe(ReservationSource.Simulator);
         var period = result.Value.Periods.ShouldHaveSingleItem();
         period.Start.ShouldBe(now);
         period.End.ShouldBe(DayParts.ToPeriod(DayParts.DateOf(now), DayPart.Afternoon).End);
@@ -195,7 +191,7 @@ public class ReservationTests
     {
         _time.SetUtcNow(new DateTimeOffset(2026, 10, 14, 20, 0, 0, TimeSpan.Zero));
 
-        var result = Reservation.BookNow(s_employeeId, "HPN72V", ReservationSource.User, _time.GetUtcNow());
+        var result = Reservation.BookNow(s_employeeId, "HPN72V", _time.GetUtcNow());
 
         result.Error.ShouldNotBeNull().Code.ShouldBe(DomainError.InvalidCode);
         result.Error.Message.ShouldBe("Nu kan je geen auto boeken. Plan vooruit.");
@@ -206,7 +202,7 @@ public class ReservationTests
     {
         _time.SetUtcNow(new DateTimeOffset(2026, 10, 14, 9, 0, 0, TimeSpan.Zero));
         var now = _time.GetUtcNow();
-        var booked = Reservation.BookNow(s_employeeId, "HPN72V", ReservationSource.User, now).Value!;
+        var booked = Reservation.BookNow(s_employeeId, "HPN72V", now).Value!;
         var today = DayParts.DateOf(now);
 
         var morning = CreateReservation(today, today, DayPart.Morning);

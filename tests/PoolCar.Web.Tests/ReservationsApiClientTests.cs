@@ -14,7 +14,7 @@ public class ReservationsApiClientTests
 
     private const string ReservationJson = """
         {"id":"11111111-1111-1111-1111-111111111111","employeeId":"f0671165-c417-421a-9eac-649e8534de6e",
-         "carId":"HPN72V","from":"2026-10-13","to":"2026-10-14","dayPart":"Morning","source":"User",
+         "carId":"HPN72V","from":"2026-10-13","to":"2026-10-14","dayPart":"Morning",
          "createdAt":"2026-10-12T08:00:00+00:00","cancelledAt":null,"notPickedUp":false,"overdue":false,
          "periods":[{"id":"22222222-2222-2222-2222-222222222222","date":"2026-10-13",
            "start":"2026-10-13T06:00:00+00:00","end":"2026-10-13T10:00:00+00:00","status":"Scheduled",
@@ -231,7 +231,7 @@ public class ReservationsApiClientTests
         var handler = new StubHttpHandler().OnJson(HttpMethod.Post, "/schedule", """
             [{"reservationId":"11111111-1111-1111-1111-111111111111","periodId":"22222222-2222-2222-2222-222222222222",
               "carId":"HPN72V","date":"2026-10-13","dayPart":"FullDay","start":"2026-10-13T06:00:00+00:00",
-              "end":"2026-10-13T16:00:00+00:00","status":"PickedUp","source":"Simulator","employeeFirstName":"Bram",
+              "end":"2026-10-13T16:00:00+00:00","status":"PickedUp","employeeFirstName":"Bram",
               "notPickedUp":false,"overdue":true,"atRisk":false}]
             """);
 
@@ -241,7 +241,6 @@ public class ReservationsApiClientTests
         var entry = entries.ShouldHaveSingleItem();
         entry.DayPart.ShouldBe(DayPart.FullDay);
         entry.Status.ShouldBe(PeriodStatus.PickedUp);
-        entry.Source.ShouldBe(ReservationSource.Simulator);
         entry.EmployeeFirstName.ShouldBe("Bram");
         entry.Overdue.ShouldBeTrue();
     }

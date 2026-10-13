@@ -39,7 +39,7 @@ public partial class PlanningPageTests(WebApplicationFactory<Program> factory) :
             $$"""{"id":"{{TestPrincipals.KnownId}}","name":"Bram Testbeek","homeOffice":"utrecht","kind":"Seeded"}""")
         .OnJson(HttpMethod.Get, "/reservations/mine", $$"""
             [{"id":"{{MyReservationId}}","employeeId":"{{TestPrincipals.KnownId}}","carId":"AA11BB",
-              "from":"2026-10-16","to":"2026-10-16","dayPart":"FullDay","source":"User",
+              "from":"2026-10-16","to":"2026-10-16","dayPart":"FullDay",
               "createdAt":"2026-10-10T08:00:00+00:00","cancelledAt":null,"notPickedUp":false,"overdue":false,
               "periods":[]}]
             """)
@@ -242,7 +242,7 @@ public partial class PlanningPageTests(WebApplicationFactory<Program> factory) :
         Guid? reservationId = null) => $$"""
         {"reservationId":"{{reservationId ?? Guid.NewGuid()}}","periodId":"{{Guid.NewGuid()}}","carId":"{{carId}}",
          "date":"{{date}}","dayPart":"{{dayPart}}","start":"2026-10-01T00:00:00+00:00","end":"2026-10-01T00:30:00+00:00",
-         "status":"{{status}}","source":"User","employeeFirstName":"{{firstName}}","notPickedUp":false,
+         "status":"{{status}}","employeeFirstName":"{{firstName}}","notPickedUp":false,
          "overdue":{{(overdue ? "true" : "false")}},"atRisk":false}
         """;
 
