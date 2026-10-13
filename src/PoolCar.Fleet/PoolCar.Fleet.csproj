@@ -10,4 +10,8 @@
     <ProjectReference Include="..\PoolCar.ServiceDefaults\PoolCar.ServiceDefaults.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Data\fleet.json" />
+  </ItemGroup>
+
 </Project>
