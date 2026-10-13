@@ -176,10 +176,9 @@ public class WebEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         using var scope = customFactory.Services.CreateScope();
         var client = scope.ServiceProvider.GetRequiredService<ReservationsApiClient>();
 
-        var result = await client.BookNowAsync("HPN72V", TestContext.Current.CancellationToken);
+        await Assert.ThrowsAsync<ServiceUnavailableException>(
+            () => client.BookNowAsync("HPN72V", TestContext.Current.CancellationToken));
 
-        Assert.False(result.IsSuccess);
-        Assert.Equal(503, result.Problem.Status);
         Assert.Single(handler.Requests);
     }
 

@@ -7,6 +7,16 @@ htmx.config.responseHandling = [
     { code: "...", swap: false },
 ];
 
+// A backend service is unavailable: show the app's own error page, or only a toast for a partial swap. Other 503
+// responses, for example from the ingress during a restart, are not swapped.
+document.addEventListener("htmx:beforeSwap", (event) => {
+    const xhr = event.detail.xhr;
+    if (xhr.status === 503 && xhr.getResponseHeader("X-PoolCar-Unavailable") === "true") {
+        event.detail.shouldSwap = true;
+        event.detail.isError = false;
+    }
+});
+
 document.addEventListener("click", (event) => {
     const closeButton = event.target.closest("[data-toast-close]");
     if (closeButton) {

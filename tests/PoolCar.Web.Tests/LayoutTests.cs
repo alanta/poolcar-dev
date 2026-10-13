@@ -130,9 +130,9 @@ public partial class LayoutTests(WebApplicationFactory<Program> factory) : IClas
 
         using var response = await client.GetAsync("/wagenpark", Token);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
+        response.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
         var html = await response.Content.ReadAsStringAsync(Token);
-        html.ShouldContain("Er ging iets mis");
+        html.ShouldContain("Tijdelijk niet beschikbaar");
         html.ShouldContain("Bram Testbeek");
         html.ShouldNotContain("Thuislocatie:");
         reservationCalls.ShouldBe(1);

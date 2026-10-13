@@ -7,7 +7,8 @@ namespace PoolCar.Web.Clients;
 
 /// <summary>Typed client for the Reservations API. Requests carry the acting user's headers through
 /// <see cref="ActingUserHandler"/>. Writes return an <see cref="ApiResult{T}"/>; reads return null for a missing
-/// resource and throw <see cref="ApiProblemException"/> for other errors.</summary>
+/// resource and throw <see cref="ApiProblemException"/> for other errors. Both throw
+/// <see cref="ServiceUnavailableException"/> when the API cannot be reached or fails with a server error.</summary>
 public class ReservationsApiClient(HttpClient httpClient)
 {
     /// <summary>The maximum number of car ids per availability or schedule request; larger lists are split.</summary>
@@ -168,15 +169,32 @@ public class ReservationsApiClient(HttpClient httpClient)
             request.Content = JsonContent.Create(body, body.GetType(), options: JsonOptions);
         }
 
-        using var response = await httpClient.SendAsync(request, cancellationToken);
-        if (response.IsSuccessStatusCode)
+        try
         {
-            var value = await response.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken)
-                ?? throw new InvalidOperationException($"The Reservations API returned an empty body for {uri}.");
-            return ApiResult<T>.Success(value);
-        }
+            using var response = await httpClient.SendAsync(request, cancellationToken);
+            if (response.IsSuccessStatusCode)
+            {
+                var value = await response.Content.ReadFromJsonAsync<T>(JsonOptions, cancellationToken)
+                    ?? throw new InvalidOperationException($"The Reservations API returned an empty body for {uri}.");
+                return ApiResult<T>.Success(value);
+            }
 
-        return await ReadProblemAsync(response, cancellationToken);
+            if (ServiceUnavailableException.IsServerError((int)response.StatusCode))
+            {
+                throw new ServiceUnavailableException(
+                    BackendService.Reservations,
+                    new HttpRequestException(
+                        $"The Reservations API returned {(int)response.StatusCode} for {method} {uri}.",
+                        null,
+                        response.StatusCode));
+            }
+
+            return await ReadProblemAsync(response, cancellationToken);
+        }
+        catch (Exception exception) when (ServiceUnavailableException.IsOutage(exception, cancellationToken))
+        {
+            throw new ServiceUnavailableException(BackendService.Reservations, exception);
+        }
     }
 
     private static async Task<ApiProblem> ReadProblemAsync(

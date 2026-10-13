@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Polly;
 using PoolCar.Web.Clients;
 using PoolCar.Web.Employees;
 using PoolCar.Web.Offices;
@@ -38,7 +37,7 @@ public sealed class UserMenuViewComponent(
             detailsLoaded = true;
         }
         catch (Exception exception) when (exception is HttpRequestException or ApiProblemException or TaskCanceledException
-            or ExecutionRejectedException)
+            or ServiceUnavailableException)
         {
             logger.LogWarning(exception, "Could not load the user menu details.");
         }
