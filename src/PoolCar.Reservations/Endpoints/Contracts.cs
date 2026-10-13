@@ -78,3 +78,26 @@ public sealed record ReservationResponse(
             periods);
     }
 }
+
+public sealed record BusyCarsRequest(IReadOnlyList<string> CarIds, DateOnly From, DateOnly To, DayPart DayPart);
+
+public sealed record CarsNowRequest(IReadOnlyList<string> CarIds);
+
+public sealed record CarIdsResponse(IReadOnlyList<string> CarIds);
+
+public sealed record ScheduleRequest(IReadOnlyList<string> CarIds, DateOnly From, DateOnly To);
+
+public sealed record ScheduleEntryResponse(
+    Guid ReservationId,
+    Guid PeriodId,
+    string CarId,
+    DateOnly Date,
+    DayPart DayPart,
+    DateTimeOffset Start,
+    DateTimeOffset End,
+    PeriodStatus Status,
+    ReservationSource Source,
+    string EmployeeFirstName,
+    bool NotPickedUp,
+    bool Overdue,
+    bool AtRisk);

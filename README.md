@@ -37,6 +37,11 @@ The Reservations service stores employees and their bookings in PostgreSQL. Requ
 | `POST /reservations/{id}/cancel` | Cancels the periods that have not been picked up. |
 | `POST /periods/{id}/pickup` | Picks up the car of a running period. |
 | `POST /periods/{id}/return` | Returns the car; an early return frees the rest of the period. |
+| `POST /availability/busy` | The ids of the cars (`carIds`, at most 200) that are not free for a day part on every date from `from` to `to`, including cars that were not returned when the request includes today. |
+| `POST /availability/now` | The ids of the cars (`carIds`, at most 200) that are in use now or were not returned. |
+| `POST /schedule` | The periods that are not cancelled for the cars (`carIds`, at most 200) from `from` to `to`, with `notPickedUp`, `overdue` and `atRisk` flags. |
+
+The availability and schedule queries do not change anything; they use `POST` to keep URLs short.
 
 Errors are problem details with a Dutch `detail` and a machine-readable `code`:
 
@@ -46,7 +51,7 @@ Errors are problem details with a Dutch `detail` and a machine-readable `code`:
 | `403` | `not-allowed` | The reservation belongs to another employee. |
 | `404` | `not-found` | The employee or reservation does not exist. |
 | `409` | `conflict` | The car is already reserved (with `conflictingDates`), or the action does not fit the current state, such as cancelling a cancelled reservation or returning a car that was not picked up. |
-| `422` | `invalid` | The request breaks a booking rule, such as more than 14 days or booking now outside day-part hours. |
+| `422` | `invalid` | The request breaks a booking rule, such as more than 14 days, more than 200 cars or booking now outside day-part hours. |
 
 In Development the OpenAPI document is available at `/openapi/v1.json`.
 

@@ -38,6 +38,8 @@ app.MapGet("/ping", () => TypedResults.Ok("pong"));
 app.MapEmployeeEndpoints();
 app.MapReservationEndpoints();
 app.MapPeriodEndpoints();
+app.MapAvailabilityEndpoints();
+app.MapScheduleEndpoints();
 
 app.MapDefaultEndpoints();
 
