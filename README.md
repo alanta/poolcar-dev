@@ -82,6 +82,18 @@ The Simulator is visible in the Aspire dashboard but does not start by default. 
 aspire run -- --Simulator:Enabled=true
 ```
 
+## Seeded employees
+
+On startup the Reservations service creates 30 fictional employees when its database has none, and AppHost also adds fixed sample bookings relative to today. To sign in as one of them, enter its ID in the User ID field of the sign-in form:
+
+| Name | Office | ID |
+| --- | --- | --- |
+| Bram Testbeek | Utrecht | `f0671165-c417-421a-9eac-649e8534de6e` |
+| Fleur Proefhuis | Amsterdam | `2c35f465-5839-4fc9-9bd6-1c56ee4f174f` |
+| Daan Voorbeeld | Eindhoven | `fa91db2c-71ec-4752-beb9-4dcf1e2e58d4` |
+
+Sample reservations are only created when `Seed:Reservations` is `true` and the database has no reservations.
+
 ## Tests and formatting
 
 ```sh

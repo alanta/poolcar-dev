@@ -24,6 +24,7 @@ public class StartupTests(PostgresFixture postgres)
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ReservationsDbContext>();
         (await db.Database.GetPendingMigrationsAsync(ct)).ShouldBeEmpty();
-        (await db.Employees.CountAsync(ct)).ShouldBe(0);
+        (await db.Employees.CountAsync(ct)).ShouldBe(30);
+        (await db.Reservations.CountAsync(ct)).ShouldBe(0);
     }
 }

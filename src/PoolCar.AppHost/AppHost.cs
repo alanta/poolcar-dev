@@ -11,6 +11,7 @@ var fleet = builder.AddProject<Projects.PoolCar_Fleet>("fleet")
     .WithHttpHealthCheck("/health");
 var reservations = builder.AddProject<Projects.PoolCar_Reservations>("reservations")
     .WithReference(reservationsDb, "reservations")
+    .WithEnvironment("Seed__Reservations", "true")
     .WithHttpHealthCheck("/health")
     .WaitFor(reservationsDb);
 var web = builder.AddProject<Projects.PoolCar_Web>("web")

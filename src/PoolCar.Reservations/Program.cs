@@ -24,6 +24,10 @@ await using (var scope = app.Services.CreateAsyncScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ReservationsDbContext>();
     await db.Database.MigrateAsync();
+    await DatabaseSeeder.SeedAsync(
+        db,
+        scope.ServiceProvider.GetRequiredService<TimeProvider>(),
+        app.Configuration.GetValue<bool>("Seed:Reservations"));
 }
 
 app.UseExceptionHandler();
