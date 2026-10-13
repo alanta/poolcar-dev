@@ -19,7 +19,7 @@ builder.Services.AddOptions<ReservationsApiOptions>()
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
-builder.Services.AddHttpClient<FleetClient>((sp, client) =>
+builder.Services.AddHttpClient<FleetApiClient>((sp, client) =>
 {
     var options = sp.GetRequiredService<IOptions<FleetApiOptions>>().Value;
     client.BaseAddress = options.BaseAddress;

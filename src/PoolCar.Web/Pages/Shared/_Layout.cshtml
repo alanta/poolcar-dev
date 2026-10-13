@@ -42,7 +42,7 @@
             <li><span>Nu een auto</span></li>
             <li><span>Mijn reserveringen</span></li>
             <li class="navigation-desktop-secondary"><span>Planning</span></li>
-            <li class="navigation-desktop-secondary"><span>Wagenpark</span></li>
+            <li class="navigation-desktop-secondary"><a asp-page="/Wagenpark">Wagenpark</a></li>
             @if (User.IsOperator())
             {
                 <li class="navigation-operator"><span>Balie</span></li>
@@ -52,7 +52,7 @@
                     <summary>Meer</summary>
                     <ul class="mobile-more-menu">
                         <li><span>Planning</span></li>
-                        <li><span>Wagenpark</span></li>
+                        <li><a asp-page="/Wagenpark">Wagenpark</a></li>
                         @if (User.IsOperator())
                         {
                             <li><span>Balie</span></li>
