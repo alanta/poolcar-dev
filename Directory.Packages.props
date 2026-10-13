@@ -19,6 +19,10 @@
     <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.19.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.19.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.19.0" />
+    <PackageVersion Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.6.0" />
+
+    <!-- Azure -->
+    <PackageVersion Include="Azure.Identity" Version="1.21.0" />
 
     <!-- Data -->
     <PackageVersion Include="EFCore.NamingConventions" Version="10.0.1" />

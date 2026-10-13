@@ -1,3 +1,4 @@
+using Azure.Identity;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
@@ -8,7 +9,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 builder.AddNpgsqlDbContext<ReservationsDbContext>(
     "reservations",
-    configureDbContextOptions: options => options.UseSnakeCaseNamingConvention());
+    configureDbContextOptions: options => options
+        .UseSnakeCaseNamingConvention()
+        .UseNpgsql(npgsql => npgsql.ConfigureDataSource(dataSource =>
+            dataSource.UseEntraIdWhenPasswordless(() => new DefaultAzureCredential()))));
 builder.Services.AddScoped<ReservationStore>();
 builder.Services.AddSingleton(TimeProvider.System);
 
