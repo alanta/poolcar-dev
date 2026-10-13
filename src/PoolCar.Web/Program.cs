@@ -4,9 +4,11 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Options;
 using PoolCar.Web.Auth;
+using PoolCar.Web.Availability;
 using PoolCar.Web.Clients;
 using PoolCar.Web.Employees;
 using PoolCar.Web.Onboarding;
+using PoolCar.Web.Schedule;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
@@ -41,6 +43,8 @@ builder.Services.AddHttpClient<ReservationsApiClient>((sp, client) =>
 builder.Services.ConfigureAll<HttpStandardResilienceOptions>(options => options.Retry.DisableForUnsafeHttpMethods());
 
 builder.Services.AddScoped<CurrentEmployee>();
+builder.Services.AddScoped<AvailabilityService>();
+builder.Services.AddScoped<ScheduleService>();
 
 // Configure EasyAuth as default authentication scheme
 builder.Services.AddAuthentication(EasyAuthAuthenticationDefaults.AuthenticationScheme)
