@@ -1,6 +1,8 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Npgsql;
 using PoolCar.DbSetup.Tests;
+using PoolCar.Reservations.Data;
 using Testcontainers.PostgreSql;
 
 [assembly: AssemblyFixture(typeof(PostgresFixture))]
@@ -38,7 +40,8 @@ public sealed class PostgresFixture : IAsyncLifetime
             Password = AdminPassword,
         }.ConnectionString);
 
-    private string ConnectionString(string database) =>
+    /// <summary>The connection string of the superuser.</summary>
+    public string ConnectionString(string database) =>
         new NpgsqlConnectionStringBuilder(_container.GetConnectionString()) { Database = database }.ConnectionString;
 }
 
@@ -70,6 +73,19 @@ public class DatabaseSetupTests(PostgresFixture postgres)
 
         (await OwnerAsync(options.Database, ct)).ShouldBe(options.Principal);
         (await HasBtreeGistAsync(options.Database, ct)).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Setup_applies_the_reservations_migrations()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var options = Options();
+
+        await Setup().RunAsync(options, ct);
+
+        await using var db = Context(options.Database);
+        (await db.Database.GetPendingMigrationsAsync(ct)).ShouldBeEmpty();
+        (await db.Database.GetAppliedMigrationsAsync(ct)).ShouldBe(db.Database.GetMigrations());
     }
 
     [Fact]
@@ -136,6 +152,12 @@ public class DatabaseSetupTests(PostgresFixture postgres)
 
         (await OwnerAsync(options.Database, ct)).ShouldBe(options.Principal);
     }
+
+    private ReservationsDbContext Context(string database) =>
+        new(new DbContextOptionsBuilder<ReservationsDbContext>()
+            .UseNpgsql(postgres.ConnectionString(database))
+            .UseSnakeCaseNamingConvention()
+            .Options);
 
     private async Task<string?> OwnerAsync(string database, CancellationToken ct)
     {

@@ -1,5 +1,7 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using PoolCar.Reservations.Data;
 
 namespace PoolCar.DbSetup;
 
@@ -71,9 +73,31 @@ public sealed partial class DatabaseSetup(
         {
             LogCreatingExtension(options.Database);
             await ExecuteAsync(target, "CREATE EXTENSION IF NOT EXISTS btree_gist", cancellationToken);
+
+            await using var db = CreateContext(target);
+            await MigrateAsync(db, options.Database, cancellationToken);
         }
 
         LogDone(options.Database);
+    }
+
+    private static ReservationsDbContext CreateContext(NpgsqlDataSource dataSource) =>
+        new(new DbContextOptionsBuilder<ReservationsDbContext>()
+            .UseNpgsql(dataSource)
+            .UseSnakeCaseNamingConvention()
+            .Options);
+
+    private async Task MigrateAsync(ReservationsDbContext db, string database, CancellationToken cancellationToken)
+    {
+        var pending = (await db.Database.GetPendingMigrationsAsync(cancellationToken)).ToList();
+        if (pending.Count == 0)
+        {
+            LogNoPendingMigrations(database);
+            return;
+        }
+
+        LogApplyingMigrations(database, string.Join(", ", pending));
+        await db.Database.MigrateAsync(cancellationToken);
     }
 
     private async Task ResetAsync(
@@ -188,6 +212,12 @@ public sealed partial class DatabaseSetup(
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Creating extension btree_gist in database {Database}.")]
     private partial void LogCreatingExtension(string database);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Database {Database} has no pending migrations.")]
+    private partial void LogNoPendingMigrations(string database);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Applying migrations {Migrations} to database {Database}.")]
+    private partial void LogApplyingMigrations(string database, string migrations);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Database {Database} is ready.")]
     private partial void LogDone(string database);

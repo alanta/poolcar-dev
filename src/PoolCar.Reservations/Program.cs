@@ -24,8 +24,10 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-await using (var scope = app.Services.CreateAsyncScope())
+// In Azure the database setup job migrates and seeds the database instead.
+if (app.Configuration.GetValue<bool>("Database:Migrate"))
 {
+    await using var scope = app.Services.CreateAsyncScope();
     var db = scope.ServiceProvider.GetRequiredService<ReservationsDbContext>();
     await db.Database.MigrateAsync();
     await DatabaseSeeder.SeedAsync(
