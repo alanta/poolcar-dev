@@ -28,6 +28,7 @@ public sealed class PoolCarApp : IAsyncLifetime
             ["--Simulator:Enabled=false"],
             timeout.Token);
         UseRandomProxyPort(builder);
+        UseFreshDatabase(builder);
 
         _app = await builder.BuildAsync(timeout.Token);
         await _app.StartAsync(timeout.Token);
@@ -60,6 +61,21 @@ public sealed class PoolCarApp : IAsyncLifetime
                      .SelectMany(proxy => proxy.Annotations.OfType<EndpointAnnotation>()))
         {
             endpoint.Port = null;
+        }
+    }
+
+    // The AppHost keeps PostgreSQL data in a volume. Tests start from an empty database instead, so the seeded
+    // reservations are relative to today and the developer's local data is left alone.
+    private static void UseFreshDatabase(IDistributedApplicationTestingBuilder builder)
+    {
+        foreach (var container in builder.Resources.OfType<ContainerResource>())
+        {
+            foreach (var volume in container.Annotations.OfType<ContainerMountAnnotation>()
+                         .Where(mount => mount.Type == ContainerMountType.Volume)
+                         .ToList())
+            {
+                container.Annotations.Remove(volume);
+            }
         }
     }
 

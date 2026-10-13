@@ -47,6 +47,21 @@ public abstract class EndToEndTest(PoolCarApp app) : IAsyncLifetime
     /// <summary>Signs in through the EasyAuth proxy as a fleet operator and waits for the home page.</summary>
     protected Task SignInAsOperatorAsync(Employee employee) => SignInAsync(employee, FleetOperatorRole);
 
+    /// <summary>Opens a page from the main navigation and waits for its heading, which defaults to the link text.</summary>
+    protected async Task NavigateToAsync(string linkName, string? heading = null)
+    {
+        await Page.GetByRole(AriaRole.Navigation, new() { Name = "Hoofdnavigatie" })
+            .GetByRole(AriaRole.Link, new() { Name = linkName, Exact = true })
+            .ClickAsync();
+
+        await Assertions.Expect(Page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync(heading ?? linkName);
+    }
+
+    /// <summary>The license plate at the end of a car's text, such as "Kies Kia EV3 HPN-72-V".</summary>
+    protected static string PlateIn(string? text) =>
+        (text ?? string.Empty).Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).LastOrDefault()
+            ?? throw new InvalidOperationException("The text has no license plate.");
+
     private async Task SignInAsync(Employee employee, string role)
     {
         await Page.GotoAsync("/");
