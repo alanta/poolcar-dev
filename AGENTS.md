@@ -19,6 +19,7 @@ PoolCar is an internal shared-car application. Web is the authenticated user ent
 - Restore local tools with `dotnet tool restore`, then install hooks with `dotnet husky install`.
 - Install gitleaks before committing; the hook fails explicitly when it is unavailable.
 - Build with `dotnet build PoolCar.slnx`; run tests with `dotnet test PoolCar.slnx`.
+- Deploy by running the Deploy workflow with a deployment name.
 - Add a Reservations migration with `dotnet ef migrations add <Name> --project src/PoolCar.Reservations --output-dir Data/Migrations`.
 - End-to-end browser tests require Chromium. Install it with `pwsh tests/PoolCar.EndToEnd.Tests/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium`.
 - In a fresh Git worktree, restore tools, install hooks, build, and install the Playwright browser before running browser tests. PostgreSQL data is isolated per AppHost worktree.
