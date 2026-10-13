@@ -4,7 +4,7 @@ PoolCar is an internal shared-car application. Web is the authenticated user ent
 
 ## Layout
 
-- `src/PoolCar.Web/` — Razor Pages UI, EasyAuth integration, and API clients.
+- `src/PoolCar.Web/` — Razor Pages UI, EasyAuth integration, and API clients. Web combines data from Fleet and Reservations.
 - `src/PoolCar.Fleet/` — Fleet API.
 - `src/PoolCar.Reservations/` — Reservations API.
 - `src/PoolCar.Simulator/` — Simulator client.
@@ -34,10 +34,27 @@ PoolCar is an internal shared-car application. Web is the authenticated user ent
 - Use the helpers in `src/PoolCar.Web/Htmx/` (`IsHtmx`, `PartialOrPage`, `HtmxRedirect`, `Toast`) and `src/PoolCar.Web/Formatting/` for dates, day parts, times and license plates.
 - Run `dotnet format PoolCar.slnx --verify-no-changes` before completing a change.
 
+## HTMX patterns
+
+| Pattern | Example |
+| --- | --- |
+| Detect htmx requests with `IsHtmx`, `IsHtmxBoosted` and `IsHtmxPartial`. | `src/PoolCar.Web/Htmx/HtmxRequestExtensions.cs` |
+| One handler returns a partial for htmx and the full page otherwise with `PartialOrPage`. | `Pages/Wagenpark.cshtml.cs` |
+| Filter forms use `hx-get` with `hx-push-url="true"` so the URL stays shareable. | `Pages/Planning.cshtml`, `Pages/Balie.cshtml` |
+| Submit buttons use `hx-disabled-elt` and `hx-indicator` with a spinner. | `Pages/_ReservationCard.cshtml` |
+| Toasts are appended out of band to `#toasts` (`ToastResult`) or stored in TempData before a redirect. | `Pages/Shared/_ToastOob.cshtml`, `Pages/MijnReserveringen.cshtml.cs` |
+| `HtmxRedirect` sends `HX-Redirect` for htmx and a normal redirect otherwise. | `Pages/Nu.cshtml.cs` |
+| Inline confirmation swaps the card for a confirm variant; without JavaScript the page renders it. | `OnGetCancelAsync` in `Pages/MijnReserveringen.cshtml.cs` |
+| `409` and `422` partials are swapped in by `htmx.config.responseHandling`. | `wwwroot/js/site.js`, `Pages/Reserveren.cshtml.cs` |
+| Polling with `hx-trigger="every 30s"` and `hx-sync`. | `Pages/_BalieBoard.cshtml` |
+| `hx-boost` and the antiforgery `RequestVerificationToken` header are set on `<body>`. | `Pages/Shared/_Layout.cshtml` |
+
+Paths without a prefix are relative to `src/PoolCar.Web/`.
+
 ## Definition of done
 
 - Build without warnings and pass formatting checks.
 - Add or update unit and API tests for behavior changes.
 - Add an end-to-end test for each new user flow.
-- Verify user-facing changes in a browser with Playwright MCP.
+- To verify UI changes: run the app, use Playwright MCP to walk through the flow, then turn the walk-through into an end-to-end test following the existing ones.
 - Keep commits small and use clear messages.
