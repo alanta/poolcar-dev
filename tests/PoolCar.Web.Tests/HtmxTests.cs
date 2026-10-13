@@ -25,6 +25,15 @@ public class HtmxTests
         httpRequest.IsHtmxPartial().ShouldBe(isPartial);
     }
 
+    [Fact]
+    public void HistoryRestore_IsNotPartial()
+    {
+        var httpRequest = CreateContext("true", null).Request;
+        httpRequest.Headers[HtmxRequestExtensions.HistoryRestoreHeader] = "true";
+
+        httpRequest.IsHtmxPartial().ShouldBeFalse();
+    }
+
     [Theory]
     [InlineData(null, null, false)]
     [InlineData("true", "true", false)]
