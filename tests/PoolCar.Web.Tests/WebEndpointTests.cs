@@ -113,7 +113,7 @@ public class WebEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         {
             builder.ConfigureServices(services =>
             {
-                services.AddHttpClient<FleetClient>()
+                services.AddHttpClient<FleetApiClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => new TestHealthHandler());
                 services.AddHttpClient<ReservationsClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => new TestHealthHandler());
@@ -146,6 +146,46 @@ public class WebEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.Contains("Thuislocatie niet ingesteld", html);
         Assert.Contains("Afmelden", html);
         Assert.Contains("Balie", html);
+    }
+
+    [Theory]
+    [InlineData("/wagenpark", "/cars?office=utrecht")]
+    [InlineData("/wagenpark?vestiging=amsterdam", "/cars?office=amsterdam")]
+    [InlineData("/wagenpark?vestiging=onbekend", "/cars?office=utrecht")]
+    public async Task AuthenticatedRequest_ToWagenpark_RendersCarsOfSelectedOfficeGroupedByCategory(
+        string path,
+        string expectedCarsRequest)
+    {
+        // Arrange
+        var fleetHandler = new TestFleetHandler();
+        using var customFactory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.AddHttpClient<FleetApiClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => fleetHandler);
+            });
+        });
+
+        using var client = customFactory.CreateClient();
+        client.DefaultRequestHeaders.Add(
+            EasyAuthAuthenticationDefaults.HeaderName,
+            EasyAuthPrincipalParser.CreateHeader(name: "Jan de Boer", objectId: "3fa85f64-5717-4562-b3fc-2c963f66afa6", roles: []));
+
+        // Act
+        using var response = await client.GetAsync(path, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains(expectedCarsRequest, fleetHandler.RequestedPaths);
+        var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        Assert.Contains("HPN-72-V", html);
+        Assert.Contains("V-123-AB", html);
+        Assert.Contains("Kia Niro", html);
+        Assert.Contains("460 km", html);
+        Assert.Contains("href=\"/wagenpark\"", html);
+        Assert.DoesNotContain("Luxe", html);
+        Assert.True(html.IndexOf(">Middel<", StringComparison.Ordinal) < html.IndexOf(">Kleine bestelbus<", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -189,6 +229,49 @@ public class WebEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.Equal("nl-NL", options.DefaultRequestCulture.Culture.Name);
         Assert.Equal("nl-NL", options.SupportedCultures?.Single().Name);
         Assert.Equal("nl-NL", options.SupportedUICultures?.Single().Name);
+    }
+
+    private sealed class TestFleetHandler : HttpMessageHandler
+    {
+        public List<string> RequestedPaths { get; } = [];
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            var path = request.RequestUri!.PathAndQuery;
+            lock (RequestedPaths)
+            {
+                RequestedPaths.Add(path);
+            }
+
+            var json = request.RequestUri.AbsolutePath switch
+            {
+                "/offices" => """
+                    [{"id":"utrecht","name":"Utrecht","address":"Utrecht"},
+                     {"id":"amsterdam","name":"Amsterdam","address":"Amsterdam"}]
+                    """,
+                "/categories" => """
+                    [{"id":"kleine-bestelbus","name":"Kleine bestelbus","description":"Bus","sortOrder":4},
+                     {"id":"middel","name":"Middel","description":"Gezinsauto","sortOrder":2},
+                     {"id":"luxe","name":"Luxe","description":"Comfort","sortOrder":3}]
+                    """,
+                "/cars" => """
+                    [{"plate":"V123AB","make":"Renault","model":"Kangoo","variant":"E-Tech","category":"kleine-bestelbus",
+                      "office":"utrecht","colour":"Wit","seats":2,"rangeKm":285,"powerKw":90,
+                      "firstRegistration":"2023-05-01","listPrice":null},
+                     {"plate":"HPN72V","make":"Kia","model":"Niro","variant":"EV","category":"middel",
+                      "office":"utrecht","colour":"Grijs","seats":5,"rangeKm":460,"powerKw":150,
+                      "firstRegistration":"2024-03-01","listPrice":42950.00}]
+                    """,
+                _ => "[]"
+            };
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json")
+            });
+        }
     }
 
     private sealed class TestHealthHandler : HttpMessageHandler

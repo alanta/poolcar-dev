@@ -2,6 +2,23 @@
 
 PoolCar is an internal application for coordinating shared company cars. It provides a single web entry point backed by Fleet and Reservations services.
 
+## Fleet data
+
+The fleet is a fixed snapshot taken from RDW open data (datasets `m9d7-ebf2` and `8ys7-d773`), stored in `src/PoolCar.Fleet/Data/fleet.json`. The plates and vehicle details are real public data; the app never calls RDW. Bookings and employees are fictional.
+
+The Fleet service loads this file into memory at startup and exposes it read-only:
+
+| Endpoint | Description |
+| --- | --- |
+| `GET /offices` | All offices. |
+| `GET /categories` | Car categories in display order. |
+| `GET /cars?office=&category=` | Cars, optionally filtered, sorted by category and then range (longest first). |
+| `GET /cars?plates=A,B,C` | Cars for a comma-separated list of up to 200 plates. |
+| `GET /cars/search?q=` | Up to 10 cars whose plate contains `q`. |
+| `GET /cars/{plate}` | A single car, or `404` when the plate is unknown. |
+
+Unknown offices or categories in a filter return `400` with a problem details body.
+
 ## Prerequisites
 
 - .NET 10 SDK (the repository pins SDK 10.0.401).

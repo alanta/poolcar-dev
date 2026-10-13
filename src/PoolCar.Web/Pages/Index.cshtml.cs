@@ -4,7 +4,7 @@ using PoolCar.Web.Clients;
 
 namespace PoolCar.Web.Pages;
 
-public class IndexModel(FleetClient fleetClient, ReservationsClient reservationsClient) : PageModel
+public class IndexModel(FleetApiClient fleetClient, ReservationsClient reservationsClient) : PageModel
 {
     public string UserName { get; private set; } = string.Empty;
     public string ObjectId { get; private set; } = string.Empty;
