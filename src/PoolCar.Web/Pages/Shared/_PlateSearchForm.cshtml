@@ -1,0 +1,8 @@
+@model string
+<form method="get" action="/zoeken" class="search-form" role="search">
+    <label for="zoek-kenteken">Kenteken</label>
+    <div class="search-form-row">
+        <input id="zoek-kenteken" name="kenteken" type="search" value="@Model" placeholder="Kenteken" autocomplete="off" spellcheck="false" />
+        <button type="submit" class="button button-dark">Zoek</button>
+    </div>
+</form>

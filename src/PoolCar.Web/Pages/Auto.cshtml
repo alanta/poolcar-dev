@@ -1,0 +1,114 @@
+@page "/auto/{kenteken}"
+@using PoolCar.Web.Cars
+@using PoolCar.Web.Formatting
+@model AutoModel
+@{
+    var car = Model.Car;
+    ViewData["Title"] = car is null ? "Auto niet gevonden" : $"{car.Make} {car.Model} {LicensePlate.Format(car.Plate)}";
+}
+
+<div class="container">
+    @if (car is null)
+    {
+        <h1>Auto niet gevonden</h1>
+        <p class="lead">Geen auto met kenteken @Model.Kenteken gevonden.</p>
+        <partial name="_PlateSearchForm" model="Model.Kenteken" />
+        <p class="section">Weet je het kenteken niet zeker? Bekijk alle auto's in het <a href="/wagenpark">Wagenpark</a>.</p>
+    }
+    else
+    {
+        <h1>@car.Make @car.Model</h1>
+        <p class="plate car-plate">@LicensePlate.Format(car.Plate)</p>
+
+        <div class="car-layout section">
+            <section class="card car-details" aria-labelledby="auto-gegevens">
+                <h2 id="auto-gegevens" class="visually-hidden">Gegevens</h2>
+                <p class="car-category">
+                    <partial name="_CategoryIcon" model="car.Category" />
+                    <span>@(Model.Category?.Name ?? car.Category)</span>
+                </p>
+                <dl class="car-facts">
+                    <div><dt>Vestiging</dt><dd>@Model.OfficeName</dd></div>
+                    <div><dt>Kleur</dt><dd>@car.Colour</dd></div>
+                    <div><dt>Bereik</dt><dd>@car.RangeKm km</dd></div>
+                    <div><dt>Zitplaatsen</dt><dd>@car.Seats</dd></div>
+                    <div><dt>Vermogen</dt><dd>@car.PowerKw kW</dd></div>
+                </dl>
+                <a class="button button-large" href="/reserveren?auto=@Uri.EscapeDataString(car.Plate)&amp;vestiging=@Uri.EscapeDataString(car.Office)">Reserveer deze auto</a>
+            </section>
+
+            <section aria-labelledby="deze-week">
+                <h2 id="deze-week">Deze week</h2>
+                <p class="muted">@DutchDate.Range(Model.Monday, Model.Monday.AddDays(6))</p>
+                <ol class="week-strip">
+                    @foreach (var day in Model.Week)
+                    {
+                        <li class="week-day@(day.IsToday ? " is-today" : "")" aria-current="@(day.IsToday ? "date" : null)">
+                            <span class="week-day-label">@DutchDate.DayAndNumber(day.Date)</span>
+                            @foreach (var slot in new[] { day.Morning, day.Afternoon })
+                            {
+                                <span class="week-slot slot-@slot.State.ToString().ToLowerInvariant()">
+                                    <span class="visually-hidden">@DayPartText.Label(slot.DayPart): @slot.Label</span>
+                                </span>
+                            }
+                        </li>
+                    }
+                </ol>
+                <ul class="week-legend" aria-label="Legenda">
+                    @foreach (var state in Enum.GetValues<SlotState>())
+                    {
+                        <li><span class="week-slot slot-@state.ToString().ToLowerInvariant()" aria-hidden="true"></span> @CarWeek.Label(state)</li>
+                    }
+                </ul>
+                <p class="form-hint">Per dag zie je de ochtend (boven) en de middag (onder).</p>
+            </section>
+        </div>
+
+        <section class="section" aria-labelledby="komende-reserveringen">
+            <h2 id="komende-reserveringen">Komende reserveringen</h2>
+            @if (Model.Upcoming.Count == 0)
+            {
+                <div class="empty-state">
+                    <p class="empty-state-title">Deze auto is de komende weken nog niet gereserveerd.</p>
+                    <p>Heb je hem nodig? Reserveer hem nu.</p>
+                    <a class="button" href="/reserveren?auto=@Uri.EscapeDataString(car.Plate)&amp;vestiging=@Uri.EscapeDataString(car.Office)">Reserveer deze auto</a>
+                </div>
+            }
+            else
+            {
+                <div class="table-scroll">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Datum</th>
+                                <th scope="col">Dagdeel</th>
+                                <th scope="col">Wie</th>
+                                <th scope="col">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var booking in Model.Upcoming)
+                            {
+                                var period = booking.Period;
+                                <tr>
+                                    <td>@DutchDate.Capitalize(DutchDate.Short(period.Date))</td>
+                                    <td>@DayPartText.Label(period.DayPart), @DayPartText.Hours(period.DayPart)</td>
+                                    <td>
+                                        @period.EmployeeFirstName
+                                        @if (booking.IsMine)
+                                        {
+                                            <span class="badge badge-mine">Jij</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge @(period.Overdue ? "badge-overdue" : period.Status == PoolCar.Web.Clients.PeriodStatus.PickedUp ? "badge-dark" : "badge-info")">@booking.StatusLabel</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    }
+</div>
