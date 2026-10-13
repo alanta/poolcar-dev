@@ -1,67 +1,51 @@
 @page "/wagenpark"
-@using PoolCar.Web.Formatting
 @model WagenparkModel
 @{
     ViewData["Title"] = "Wagenpark";
 }
 
-<div class="container fleet-page">
+<div class="container">
     <h1>Wagenpark</h1>
+    <p class="lead">Welke auto's hebben we? Kies een vestiging en bekijk de auto's per categorie.</p>
 
-    <form method="get" class="form-row">
-        <div class="form-field">
-            <label for="vestiging">Vestiging</label>
-            <select id="vestiging" name="vestiging">
-                @foreach (var office in Model.Offices)
-                {
-                    <option value="@office.Id" selected="@(office.Id == Model.SelectedOffice?.Id)">@office.Name</option>
-                }
-            </select>
-        </div>
-        <button type="submit" class="button button-dark">Bekijk</button>
-    </form>
-
-    @if (Model.SelectedOffice is null)
+    @if (Model.SelectedOffice is not null)
     {
-        <div class="empty-state section">
-            <p class="empty-state-title">Er zijn nog geen vestigingen.</p>
-        </div>
-    }
-    else
-    {
-        <p class="lead section">@Model.CarCount auto's in @Model.SelectedOffice.Name</p>
-
-        @foreach (var group in Model.Groups)
-        {
-            <section class="section" aria-labelledby="categorie-@group.Category.Id">
-                <h2 id="categorie-@group.Category.Id">@group.Category.Name</h2>
-                <p class="muted">@group.Category.Description</p>
-                <div class="table-scroll">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th scope="col">Kenteken</th>
-                                <th scope="col">Model</th>
-                                <th scope="col">Kleur</th>
-                                <th scope="col">Bereik</th>
-                                <th scope="col">Zitplaatsen</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var car in group.Cars)
-                            {
-                                <tr>
-                                    <td class="plate">@LicensePlate.Format(car.Plate)</td>
-                                    <td>@car.Make @car.Model</td>
-                                    <td>@car.Colour</td>
-                                    <td>@car.RangeKm km</td>
-                                    <td>@car.Seats</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+        <form method="get" action="/wagenpark" class="fleet-filter"
+              hx-get="/wagenpark" hx-target="#wagenpark-autos" hx-trigger="change, submit"
+              hx-push-url="true" hx-indicator="#wagenpark-spinner">
+            <div class="form-field">
+                <label for="vestiging">Vestiging</label>
+                <select id="vestiging" name="vestiging">
+                    @foreach (var office in Model.Offices)
+                    {
+                        <option value="@office.Id" selected="@(office.Id == Model.SelectedOffice.Id)">@office.Name</option>
+                    }
+                </select>
+            </div>
+            <fieldset>
+                <legend>Categorie</legend>
+                <div class="segmented">
+                    <label>
+                        <input type="radio" name="categorie" value="" checked="@(Model.SelectedCategory is null)" />
+                        <span>Alle</span>
+                    </label>
+                    @foreach (var category in Model.Categories)
+                    {
+                        <label>
+                            <input type="radio" name="categorie" value="@category.Id" checked="@(category.Id == Model.SelectedCategory?.Id)" />
+                            <span>@category.Name</span>
+                        </label>
+                    }
                 </div>
-            </section>
-        }
+            </fieldset>
+            <div class="button-row">
+                <button type="submit" class="button button-dark">Bekijk</button>
+                <span id="wagenpark-spinner" class="spinner" aria-hidden="true"></span>
+            </div>
+        </form>
     }
+
+    <div id="wagenpark-autos" class="section">
+        <partial name="_WagenparkCars" model="Model" />
+    </div>
 </div>

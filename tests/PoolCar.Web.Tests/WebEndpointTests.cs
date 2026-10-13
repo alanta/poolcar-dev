@@ -227,8 +227,8 @@ public class WebEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.Contains("Kia Niro", html);
         Assert.Contains("460 km", html);
         Assert.Contains("href=\"/wagenpark\"", html);
-        Assert.DoesNotContain("Luxe", html);
-        Assert.True(html.IndexOf(">Middel<", StringComparison.Ordinal) < html.IndexOf(">Kleine bestelbus<", StringComparison.Ordinal));
+        Assert.DoesNotContain("Luxe, ", html);
+        Assert.True(html.IndexOf(">Middel, 1 auto,", StringComparison.Ordinal) < html.IndexOf(">Kleine bestelbus, 1 auto,", StringComparison.Ordinal));
     }
 
     [Fact]
