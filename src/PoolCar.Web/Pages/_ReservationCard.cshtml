@@ -1,0 +1,91 @@
+@using PoolCar.Web.MyReservations
+@model ReservationCardView
+@{
+    var card = Model.Card;
+    var cardId = $"reservering-{card.Id}";
+    var target = $"#{cardId}";
+    var isPast = card.Group == ReservationGroup.Past;
+    var cancelUrl = Url.Page("/MijnReserveringen", "Cancel", new { id = card.Id });
+    var cardUrl = Url.Page("/MijnReserveringen", "Card", new { id = card.Id });
+}
+<article id="@cardId" class="card reservation-card@(isPast ? " reservation-card-past" : null)@(card.IsOverdue ? " is-overdue" : null)" aria-labelledby="@cardId-titel">
+    <h3 id="@cardId-titel" class="reservation-card-title">
+        <span class="reservation-when">@card.When</span>
+        <span class="reservation-car">@(card.CarName ?? "Auto") <span class="plate">@card.Plate</span></span>
+    </h3>
+
+    @if (isPast)
+    {
+        <p class="card-meta">@card.Summary</p>
+    }
+    else
+    {
+        <ul class="reservation-periods">
+            @foreach (var period in card.Periods)
+            {
+                <li class="reservation-period@(period.State == PeriodState.NotPickedUp ? " is-not-picked-up" : null)">
+                    <span class="reservation-period-time">@period.DateText · @period.Hours</span>
+                    @switch (period.State)
+                    {
+                        case PeriodState.Overdue:
+                            <span class="badge badge-overdue">@period.OverdueSince</span>
+                            break;
+                        case PeriodState.PickedUp:
+                            <span class="badge badge-dark">Onderweg</span>
+                            break;
+                        case PeriodState.ReadyForPickUp:
+                            <span class="badge badge-now">Klaar om op te halen</span>
+                            break;
+                        case PeriodState.NotPickedUp:
+                            <span class="badge">Niet opgehaald</span>
+                            break;
+                    }
+                    @if (period.CanReturn)
+                    {
+                        var url = Url.Page("/MijnReserveringen", "Return", new { id = card.Id, periodId = period.Id });
+                        <form method="post" asp-page="/MijnReserveringen" asp-page-handler="Return" asp-route-id="@card.Id" asp-route-periodId="@period.Id" class="reservation-action">
+                            <button type="submit" class="button button-large" hx-post="@url" hx-target="@target" hx-swap="outerHTML" hx-indicator="this" hx-disabled-elt="this">
+                                Inleveren <span class="spinner" aria-hidden="true"></span>
+                            </button>
+                        </form>
+                    }
+                    else if (period.CanPickUp)
+                    {
+                        var url = Url.Page("/MijnReserveringen", "PickUp", new { id = card.Id, periodId = period.Id });
+                        <form method="post" asp-page="/MijnReserveringen" asp-page-handler="PickUp" asp-route-id="@card.Id" asp-route-periodId="@period.Id" class="reservation-action">
+                            <button type="submit" class="button" hx-post="@url" hx-target="@target" hx-swap="outerHTML" hx-indicator="this" hx-disabled-elt="this">
+                                Ophalen <span class="spinner" aria-hidden="true"></span>
+                            </button>
+                        </form>
+                    }
+                </li>
+            }
+        </ul>
+
+        @if (card.CanCancel)
+        {
+            @if (Model.ConfirmCancel)
+            {
+                <div class="reservation-confirm" role="group" aria-labelledby="@cardId-bevestig">
+                    <p id="@cardId-bevestig"><strong>Weet je het zeker?</strong> Je annuleert de hele reservering.</p>
+                    <form method="post" asp-page="/MijnReserveringen" asp-page-handler="Cancel" asp-route-id="@card.Id" class="button-row">
+                        <button type="submit" class="button button-small" hx-post="@cancelUrl" hx-target="@target" hx-swap="outerHTML" hx-indicator="this" hx-disabled-elt="this">
+                            Ja <span class="spinner" aria-hidden="true"></span>
+                        </button>
+                        <a class="button button-secondary button-small" href="@MijnReserveringenModel.CardUrl(card.Id)" hx-get="@cardUrl" hx-target="@target" hx-swap="outerHTML">Nee</a>
+                    </form>
+                </div>
+            }
+            else
+            {
+                <p class="reservation-cancel">
+                    <a class="link-button" href="@cancelUrl#@cardId" hx-get="@cancelUrl" hx-target="@target" hx-swap="outerHTML">Annuleren</a>
+                </p>
+            }
+        }
+    }
+</article>
+@if (Model.Toast is not null)
+{
+    <partial name="_ToastOob" model="Model.Toast" />
+}

@@ -1,0 +1,74 @@
+@page "/mijn-reserveringen"
+@using PoolCar.Web.MyReservations
+@model MijnReserveringenModel
+@{
+    ViewData["Title"] = "Mijn reserveringen";
+    var overview = Model.Overview;
+}
+
+<div class="container my-reservations">
+    <h1>Mijn reserveringen</h1>
+
+    <section class="section" aria-labelledby="onderweg">
+        <h2 id="onderweg">Onderweg</h2>
+        @if (overview.OnTheRoad.Count == 0)
+        {
+            <div class="empty-state">
+                <p class="empty-state-title">Je bent nu niet onderweg.</p>
+                <p>Moet je nu weg? Neem een auto die nu vrij is.</p>
+                <a class="button" href="/nu">Nu een auto</a>
+            </div>
+        }
+        else
+        {
+            <div class="stack">
+                @foreach (var card in overview.OnTheRoad)
+                {
+                    <partial name="@ReservationCardView.Partial" model="new ReservationCardView(card)" />
+                }
+            </div>
+        }
+    </section>
+
+    <section class="section" aria-labelledby="gepland">
+        <h2 id="gepland">Gepland</h2>
+        @if (overview.Planned.Count == 0)
+        {
+            <div class="empty-state">
+                <p class="empty-state-title">Je hebt niets gepland.</p>
+                <p>Heb je binnenkort een auto nodig? Reserveer er een, dan staat hij voor je klaar.</p>
+                <a class="button" href="/reserveren">Auto reserveren</a>
+            </div>
+        }
+        else
+        {
+            <div class="stack">
+                @foreach (var card in overview.Planned)
+                {
+                    <partial name="@ReservationCardView.Partial" model="new ReservationCardView(card, card.Id == Model.ConfirmCancelId && card.CanCancel)" />
+                }
+            </div>
+        }
+    </section>
+
+    <section class="section" aria-labelledby="afgelopen">
+        <h2 id="afgelopen">Afgelopen</h2>
+        <p class="muted">De laatste @ReservationOverview.HistoryDays dagen.</p>
+        @if (overview.Past.Count == 0)
+        {
+            <div class="empty-state">
+                <p class="empty-state-title">Je hebt de laatste @ReservationOverview.HistoryDays dagen geen auto gebruikt.</p>
+                <p>Ritten die voorbij zijn, zie je hier terug.</p>
+            </div>
+        }
+        else
+        {
+            <ul class="past-reservations">
+                @foreach (var card in overview.Past)
+                {
+                    <li><partial name="@ReservationCardView.Partial" model="new ReservationCardView(card)" /></li>
+                }
+            </ul>
+        }
+    </section>
+</div>
