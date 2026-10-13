@@ -7,6 +7,8 @@ public sealed class FleetCatalog
 {
     private const string EmbeddedResourceName = "PoolCar.Fleet.Data.fleet.json";
 
+    public const int MaxSearchResults = 10;
+
     private static readonly JsonSerializerOptions s_jsonOptions = new(JsonSerializerDefaults.Web);
 
     private readonly FrozenDictionary<string, Office> _officesById;
@@ -95,6 +97,9 @@ public sealed class FleetCatalog
             .Select(FindCar)
             .OfType<Car>(),
     ];
+
+    public IReadOnlyList<Car> SearchByPlate(string query) =>
+        _cars.Where(c => c.Plate.Contains(query)).Take(MaxSearchResults).ToList();
 
     private sealed record FleetData(
         IReadOnlyList<Office> Offices,

@@ -12,6 +12,7 @@ public static class CarEndpoints
         var group = app.MapGroup("/cars").WithTags("Cars");
 
         group.MapGet("", GetCars).WithName("GetCars");
+        group.MapGet("/search", SearchCars).WithName("SearchCars");
         group.MapGet("/{plate}", GetCar).WithName("GetCar");
 
         return app;
@@ -54,6 +55,10 @@ public static class CarEndpoints
 
         return TypedResults.Ok<IReadOnlyList<CarResponse>>([.. cars.Select(CarResponse.From)]);
     }
+
+    private static Ok<IReadOnlyList<CarResponse>> SearchCars(FleetCatalog catalog, string? q) =>
+        TypedResults.Ok<IReadOnlyList<CarResponse>>(
+            string.IsNullOrEmpty(q) ? [] : [.. catalog.SearchByPlate(q).Select(CarResponse.From)]);
 
     private static Results<Ok<CarResponse>, ProblemHttpResult> GetCar(FleetCatalog catalog, string plate)
     {

@@ -14,6 +14,7 @@ The Fleet service loads this file into memory at startup and exposes it read-onl
 | `GET /categories` | Car categories in display order. |
 | `GET /cars?office=&category=` | Cars, optionally filtered, sorted by category and then range (longest first). |
 | `GET /cars?plates=A,B,C` | Cars for a comma-separated list of up to 200 plates. |
+| `GET /cars/search?q=` | Up to 10 cars whose plate contains `q`. |
 | `GET /cars/{plate}` | A single car, or `404` when the plate is unknown. |
 
 Unknown offices or categories in a filter return `400` with a problem details body.

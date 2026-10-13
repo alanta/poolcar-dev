@@ -133,4 +133,22 @@ public class FleetCatalogTests
             s_categories,
             [CreateCar("AA111A", "klein", "rotterdam", 300)]));
     }
+
+    [Fact]
+    public void SearchByPlate_PartialPlate_ReturnsMatchingCars()
+    {
+        var catalog = CreateCatalog();
+
+        var plates = catalog.SearchByPlate("333").Select(c => c.Plate);
+
+        plates.ShouldBe(["CC333C"]);
+    }
+
+    [Fact]
+    public void SearchByPlate_NoMatch_ReturnsEmptyList()
+    {
+        var catalog = CreateCatalog();
+
+        catalog.SearchByPlate("XYZ").ShouldBeEmpty();
+    }
 }

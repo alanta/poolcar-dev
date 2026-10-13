@@ -112,6 +112,30 @@ public class FleetApiTests(WebApplicationFactory<Program> factory) : IClassFixtu
     }
 
     [Fact]
+    public async Task SearchCars_FullPlate_ReturnsThatCar()
+    {
+        var cars = await _client.GetFromJsonAsync<CarResponse[]>("/cars/search?q=HPN72V", CancellationToken);
+
+        cars.ShouldNotBeNull().ShouldHaveSingleItem().Model.ShouldBe("EV3");
+    }
+
+    [Fact]
+    public async Task SearchCars_ManyMatches_ReturnsAtMostTen()
+    {
+        var cars = await _client.GetFromJsonAsync<CarResponse[]>("/cars/search?q=V", CancellationToken);
+
+        cars.ShouldNotBeNull().Length.ShouldBe(10);
+    }
+
+    [Fact]
+    public async Task SearchCars_WithoutQuery_ReturnsEmptyList()
+    {
+        var cars = await _client.GetFromJsonAsync<CarResponse[]>("/cars/search", CancellationToken);
+
+        cars.ShouldNotBeNull().ShouldBeEmpty();
+    }
+
+    [Fact]
     public async Task Health_ReturnsOk()
     {
         using var response = await _client.GetAsync("/health", CancellationToken);
