@@ -7,7 +7,7 @@ PoolCar is an internal shared-car application. Web is the authenticated user ent
 - `src/PoolCar.Web/` — Razor Pages UI, EasyAuth integration, and API clients. Web combines data from Fleet and Reservations.
 - `src/PoolCar.Fleet/` — Fleet API.
 - `src/PoolCar.Reservations/` — Reservations API.
-- `src/PoolCar.DbSetup/` — console tool that creates a deployment's PostgreSQL database and owner in Azure.
+- `src/PoolCar.DbSetup/` — console tool that creates, migrates and seeds a deployment's PostgreSQL database in Azure and grants the Reservations identity data access.
 - `src/PoolCar.AppHost/` — local Aspire resources and service wiring.
 - `src/PoolCar.ServiceDefaults/` — shared telemetry, resilience, and health checks.
 - `tests/PoolCar.*.Tests/` — unit, API, web, and end-to-end tests.

@@ -9,10 +9,11 @@ namespace PoolCar.DbSetup;
 public delegate NpgsqlDataSource DataSourceFactory(string database);
 
 /// <summary>
-/// Creates and migrates a database owned by the administrator, idempotently, and gives a principal access to its data.
+/// Creates, migrates and seeds a database owned by the administrator, idempotently, and gives a principal access to
+/// its data.
 /// </summary>
 public sealed partial class DatabaseSetup(
-    DataSourceFactory dataSources, IPrincipals principals, ILogger<DatabaseSetup> logger)
+    DataSourceFactory dataSources, IPrincipals principals, TimeProvider time, ILogger<DatabaseSetup> logger)
 {
     public async Task RunAsync(DbSetupOptions options, CancellationToken cancellationToken)
     {
@@ -78,6 +79,9 @@ public sealed partial class DatabaseSetup(
 
             await using var db = CreateContext(target);
             await MigrateAsync(db, options.Database, cancellationToken);
+
+            LogSeeding(options.Database);
+            await DatabaseSeeder.SeedAsync(db, time, includeReservations: true, cancellationToken);
         }
 
         LogDone(options.Database);
@@ -269,6 +273,9 @@ public sealed partial class DatabaseSetup(
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Applying migrations {Migrations} to database {Database}.")]
     private partial void LogApplyingMigrations(string database, string migrations);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Seeding database {Database} when it has no data.")]
+    private partial void LogSeeding(string database);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Database {Database} is ready.")]
     private partial void LogDone(string database);

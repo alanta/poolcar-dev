@@ -141,15 +141,6 @@ jobs:
             --query properties.outputs \
             --output json > apps-outputs.json
 
-      # With an unchanged image, Reservations keeps its revision; a restart migrates and seeds the new database.
-      - name: Restart Reservations
-        if: inputs.reset-data
-        run: |
-          app="ca-$DEPLOYMENT-reservations"
-          revision=$(az containerapp show --resource-group "$RESOURCE_GROUP" --name "$app" \
-            --query properties.latestRevisionName --output tsv)
-          az containerapp revision restart --resource-group "$RESOURCE_GROUP" --name "$app" --revision "$revision"
-
       - name: Write summary
         run: |
           web_url="https://$(jq -r .webFqdn.value apps-outputs.json)"

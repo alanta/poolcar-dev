@@ -47,6 +47,8 @@ public sealed class PostgresFixture : IAsyncLifetime
 
 public class DatabaseSetupTests(PostgresFixture postgres)
 {
+    private const int SeededEmployees = 30;
+
     private readonly string _suffix = Guid.NewGuid().ToString("N")[..8];
     private readonly Guid _objectId = Guid.NewGuid();
 
@@ -61,7 +63,7 @@ public class DatabaseSetupTests(PostgresFixture postgres)
     };
 
     private DatabaseSetup Setup() =>
-        new(postgres.Admin, new CommentedRolePrincipals(), NullLogger<DatabaseSetup>.Instance);
+        new(postgres.Admin, new CommentedRolePrincipals(), TimeProvider.System, NullLogger<DatabaseSetup>.Instance);
 
     [Fact]
     public async Task Setup_creates_a_database_owned_by_the_administrator_with_btree_gist()
@@ -89,6 +91,19 @@ public class DatabaseSetupTests(PostgresFixture postgres)
         await using var db = Context(options.Database);
         (await db.Database.GetPendingMigrationsAsync(ct)).ShouldBeEmpty();
         (await db.Database.GetAppliedMigrationsAsync(ct)).ShouldBe(db.Database.GetMigrations());
+    }
+
+    [Fact]
+    public async Task Setup_seeds_the_employees_and_sample_reservations()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var options = Options();
+
+        await Setup().RunAsync(options, ct);
+
+        await using var db = Context(options.Database);
+        (await db.Employees.CountAsync(ct)).ShouldBe(SeededEmployees);
+        (await db.Reservations.CountAsync(ct)).ShouldBePositive();
     }
 
     [Fact]
@@ -132,14 +147,16 @@ public class DatabaseSetupTests(PostgresFixture postgres)
         await Setup().RunAsync(options, ct);
         await CreateTableAsync(options.Database, ct);
         var roleOid = await RoleOidAsync(options.Principal, ct);
+        var reservations = await CountAsync(options.Database, "reservations", ct);
 
         await Setup().RunAsync(options, ct);
 
         (await OwnerAsync(options.Database, ct)).ShouldBe(PostgresFixture.AdminUser);
         (await HasTableAsync(options.Database, ct)).ShouldBeTrue();
         (await RoleOidAsync(options.Principal, ct)).ShouldBe(roleOid);
+        (await CountAsync(options.Database, "reservations", ct)).ShouldBe(reservations);
         await using var connection = await ConnectAsAsync(options.Principal, options.Database, ct);
-        (await ScalarAsync(connection, "SELECT count(*) FROM employees", ct)).ShouldBe(0);
+        (await ScalarAsync(connection, "SELECT count(*) FROM employees", ct)).ShouldBe(SeededEmployees);
     }
 
     [Fact]
@@ -181,7 +198,7 @@ public class DatabaseSetupTests(PostgresFixture postgres)
         (await TableOwnerAsync(options.Database, ct)).ShouldBe(PostgresFixture.AdminUser);
         await using var connection = await ConnectAsAsync(options.Principal, options.Database, ct);
         (await ScalarAsync(connection, "SELECT count(*) FROM marker", ct)).ShouldBe(0);
-        (await ScalarAsync(connection, "SELECT count(*) FROM employees", ct)).ShouldBe(0);
+        (await ScalarAsync(connection, "SELECT count(*) FROM employees", ct)).ShouldBe(SeededEmployees);
     }
 
     [Fact]
@@ -198,7 +215,7 @@ public class DatabaseSetupTests(PostgresFixture postgres)
         (await ObjectIdAsync(options.Principal, ct)).ShouldBe(Guid.Parse(options.PrincipalObjectId));
         (await OwnerAsync(options.Database, ct)).ShouldBe(PostgresFixture.AdminUser);
         await using var connection = await ConnectAsAsync(options.Principal, options.Database, ct);
-        (await ScalarAsync(connection, "SELECT count(*) FROM employees", ct)).ShouldBe(0);
+        (await ScalarAsync(connection, "SELECT count(*) FROM employees", ct)).ShouldBe(SeededEmployees);
     }
 
     [Fact]
@@ -208,6 +225,7 @@ public class DatabaseSetupTests(PostgresFixture postgres)
         var options = Options();
         await Setup().RunAsync(options, ct);
         await CreateTableAsync(options.Database, ct);
+        await SuperuserExecuteAsync(options.Database, "DELETE FROM reservation_periods", ct);
         await using var openConnection = postgres.Admin(options.Database);
         await using (var command = openConnection.CreateCommand("SELECT 1"))
         {
@@ -221,6 +239,8 @@ public class DatabaseSetupTests(PostgresFixture postgres)
         (await HasBtreeGistAsync(options.Database, ct)).ShouldBeTrue();
         await using var db = Context(options.Database);
         (await db.Database.GetPendingMigrationsAsync(ct)).ShouldBeEmpty();
+        (await db.Employees.CountAsync(ct)).ShouldBe(SeededEmployees);
+        (await db.ReservationPeriods.CountAsync(ct)).ShouldBePositive();
     }
 
     [Fact]
@@ -297,6 +317,9 @@ public class DatabaseSetupTests(PostgresFixture postgres)
         await using var command = new NpgsqlCommand(sql, connection);
         return (long)(await command.ExecuteScalarAsync(ct))!;
     }
+
+    private async Task<long> CountAsync(string database, string table, CancellationToken ct) =>
+        await ScalarAsync(database, $"SELECT count(*) FROM {Identifier.Quote(table)}", ct);
 
     private async Task<List<string>> TableOwnersAsync(string database, CancellationToken ct)
     {
