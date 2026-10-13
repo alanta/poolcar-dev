@@ -78,7 +78,7 @@ Open the EasyAuth development proxy at <http://localhost:5000>. On the sign-in f
 
 ## Seeded employees
 
-On startup the Reservations service creates 30 fictional employees when its database has none, and AppHost also adds fixed sample bookings relative to today. To sign in as one of them, enter its ID in the User ID field of the sign-in form:
+Locally, AppHost sets `Database:Migrate`, so the Reservations service migrates its database on startup and creates 30 fictional employees when it has none; AppHost also adds fixed sample bookings relative to today. In Azure the database setup job does this instead. To sign in as one of them, enter its ID in the User ID field of the sign-in form:
 
 | Name | Office | ID |
 | --- | --- | --- |
@@ -86,7 +86,7 @@ On startup the Reservations service creates 30 fictional employees when its data
 | Fleur Proefhuis | Amsterdam | `2c35f465-5839-4fc9-9bd6-1c56ee4f174f` |
 | Daan Voorbeeld | Eindhoven | `fa91db2c-71ec-4752-beb9-4dcf1e2e58d4` |
 
-Sample reservations are only created when `Seed:Reservations` is `true` and the database has no reservations.
+Sample reservations are only created when `Seed:Reservations` is `true` and the database has no reservations. The database setup job always creates them in an empty database.
 
 ## Tests and formatting
 
@@ -127,12 +127,12 @@ No manual setup is required to run the application locally. Deploying to Azure n
   done
   ```
 
-- [ ] Create the resource group `rg-poolcar` in Sweden Central (`swedencentral`).
+- [ ] Create the resource group `rg-poolcar` in UK South (`uksouth`).
 - [ ] Create the deploy identity:
   - [ ] Entra app registration `poolcar-github` with a federated credential for the subject `repo:alanta@73225/poolcar@1416094794:environment:azure`.
   - [ ] On `rg-poolcar`, assign it Contributor and Role Based Access Control Administrator, with the condition that it may only assign the AcrPull role.
 - [ ] Create the sign-in app:
-  - [ ] Entra app registration `PoolCar` for accounts in any organizational directory (multi-tenant), with ID tokens enabled.
+  - [ ] Entra app registration `PoolCar` for accounts in any organizational directory (multi-tenant), with ID tokens enabled: under Authentication, select "ID tokens" for implicit grant and hybrid flows, or run `az ad app update --id <appId> --enable-id-token-issuance true`. The built-in Container Apps authentication uses the hybrid flow.
   - [ ] App role `FleetOperator` with allowed member type Users/Groups, assigned to the fleet operators.
   - [ ] A client secret.
 - [ ] Create the GitHub environment `azure` with:
@@ -152,11 +152,11 @@ The Deploy workflow deploys a named deployment to `rg-poolcar`. Pushes to `main`
 | `ref` | Branch, tag or commit to deploy. Defaults to `main`. |
 | `reset-data` | Drop and reseed the deployment's database. |
 
-A run deploys the shared infrastructure, builds the Web, Fleet, Reservations and DbSetup images and pushes them tagged with the commit SHA, runs the database setup job to create the deployment's database and owner, and then deploys the apps. The run summary shows the web URL and redirect URI. Runs are queued one at a time, also across deployments, because they share the PostgreSQL server.
+A run deploys the shared infrastructure, builds the Web, Fleet, Reservations and DbSetup images and pushes them tagged with the commit SHA, runs the database setup job, and then deploys the apps. The job runs as `id-poolcar-dbadmin`, which owns the deployment's database: it creates the database, applies the Reservations migrations, seeds an empty database and gives the deployment's identity access to the data, but not to the schema. Reservations doesn't migrate or seed in Azure. The run summary shows the web URL and redirect URI. Runs are queued one at a time, also across deployments, because they share the PostgreSQL server.
 
 To add a deployment, run the workflow with a new name, then add its redirect URI to the `PoolCar` app registration.
 
-`reset-data` drops the deployment's database before setup, which creates it again empty. After deploying the apps, the workflow restarts Reservations, which migrates the database and seeds the employees and sample bookings, relative to the day they're seeded.
+`reset-data` drops the deployment's database before setup, which creates, migrates and seeds it again with the employees and sample bookings, relative to the day they're seeded.
 
 To remove a deployment, for example `scratch`, delete its resources and remove its redirect URI from `PoolCar`:
 

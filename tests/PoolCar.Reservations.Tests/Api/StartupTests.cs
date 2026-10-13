@@ -10,12 +10,14 @@ namespace PoolCar.Reservations.Tests.Api;
 public class StartupTests(PostgresFixture postgres)
 {
     [Fact]
-    public async Task The_service_migrates_its_database_and_reports_healthy()
+    public async Task The_service_migrates_its_database_when_enabled_and_reports_healthy()
     {
         var ct = TestContext.Current.CancellationToken;
         var connectionString = await postgres.CreateDatabaseAsync();
         await using var factory = new WebApplicationFactory<Program>()
-            .WithWebHostBuilder(builder => builder.UseSetting("ConnectionStrings:reservations", connectionString));
+            .WithWebHostBuilder(builder => builder
+                .UseSetting("ConnectionStrings:reservations", connectionString)
+                .UseSetting("Database:Migrate", "true"));
         using var client = factory.CreateClient();
 
         var response = await client.GetAsync("/health", ct);
@@ -26,5 +28,22 @@ public class StartupTests(PostgresFixture postgres)
         (await db.Database.GetPendingMigrationsAsync(ct)).ShouldBeEmpty();
         (await db.Employees.CountAsync(ct)).ShouldBe(30);
         (await db.Reservations.CountAsync(ct)).ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task The_service_leaves_its_database_alone_by_default()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var connectionString = await postgres.CreateDatabaseAsync();
+        await using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder => builder.UseSetting("ConnectionStrings:reservations", connectionString));
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/ping", ct);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ReservationsDbContext>();
+        (await db.Database.GetAppliedMigrationsAsync(ct)).ShouldBeEmpty();
     }
 }

@@ -1,18 +1,14 @@
 using Azure.Core;
 using Npgsql;
+using PoolCar.Reservations.Data;
 
 namespace PoolCar.DbSetup;
 
 /// <summary>Connects to the server as its Microsoft Entra administrator.</summary>
 public static class EntraDataSources
 {
-    public const string Scope = "https://ossrdbms-aad.database.windows.net/.default";
-
-    public static DataSourceFactory Create(DbSetupOptions options, TokenCredential credential)
-    {
-        var context = new TokenRequestContext([Scope]);
-
-        return database =>
+    public static DataSourceFactory Create(DbSetupOptions options, TokenCredential credential) =>
+        database =>
         {
             var builder = new NpgsqlDataSourceBuilder
             {
@@ -24,10 +20,7 @@ public static class EntraDataSources
                     SslMode = SslMode.Require,
                 },
             };
-            builder.UsePasswordProvider(
-                _ => credential.GetToken(context, default).Token,
-                async (_, ct) => (await credential.GetTokenAsync(context, ct)).Token);
+            builder.UseEntraIdWhenPasswordless(() => credential);
             return builder.Build();
         };
-    }
 }

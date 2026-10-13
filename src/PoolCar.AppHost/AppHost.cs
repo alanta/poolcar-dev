@@ -9,6 +9,7 @@ var fleet = builder.AddProject<Projects.PoolCar_Fleet>("fleet")
     .WithHttpHealthCheck("/health");
 var reservations = builder.AddProject<Projects.PoolCar_Reservations>("reservations")
     .WithReference(reservationsDb, "reservations")
+    .WithEnvironment("Database__Migrate", "true")
     .WithEnvironment("Seed__Reservations", "true")
     .WithHttpHealthCheck("/health")
     .WaitFor(reservationsDb);

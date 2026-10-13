@@ -40,6 +40,7 @@ public class ReservationsApiFactory(PostgresFixture postgres) : WebApplicationFa
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting("ConnectionStrings:reservations", _connectionString);
+        builder.UseSetting("Database:Migrate", "true");
         builder.ConfigureTestServices(services =>
         {
             services.AddSingleton<TimeProvider>(_clock);
