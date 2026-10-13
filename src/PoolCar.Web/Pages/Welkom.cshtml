@@ -1,0 +1,36 @@
+@page "/welkom"
+@model WelkomModel
+@{
+    ViewData["Title"] = "Welkom";
+}
+
+<div class="container welcome-page">
+    <h1>Welkom bij PoolCar, @Model.FirstName.</h1>
+    <p class="lead">Kies je vestiging. Daar zoeken we standaard een auto voor je. Je kan dit later altijd aanpassen.</p>
+
+    @if (Model.ErrorMessage is not null)
+    {
+        <p class="form-error" role="alert">@Model.ErrorMessage</p>
+    }
+
+    <form method="post" class="section">
+        <input type="hidden" asp-for="ReturnUrl" />
+
+        <div class="form-field">
+            <label asp-for="Name">Je naam</label>
+            <input asp-for="Name" autocomplete="name" />
+            <span asp-validation-for="Name" class="field-error"></span>
+        </div>
+
+        <fieldset>
+            <legend>Je vestiging</legend>
+            <span asp-validation-for="Office" class="field-error"></span>
+            <div class="button-row">
+                @foreach (var office in Model.Offices)
+                {
+                    <button type="submit" name="Office" value="@office.Id" class="button button-large button-dark">@office.Name</button>
+                }
+            </div>
+        </fieldset>
+    </form>
+</div>

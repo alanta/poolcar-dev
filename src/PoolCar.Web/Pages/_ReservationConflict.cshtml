@@ -1,0 +1,7 @@
+@model ReservationConflict
+@* The car can't be reserved: it was taken before posting or while posting (409). Used for a preselected car and for a car chosen from the list. *@
+<section class="section card reserve-conflict" role="alert" aria-labelledby="stap-conflict">
+    <h2 id="stap-conflict" tabindex="-1" autofocus="@(ViewData["Autofocus"] is true)">Deze auto is niet vrij</h2>
+    <p>@Model.Message</p>
+    <a class="button button-dark" href="@Model.OtherCarsUrl">Kies een andere auto</a>
+</section>

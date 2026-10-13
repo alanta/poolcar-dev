@@ -1,0 +1,36 @@
+@model string
+@* Category icon by Fleet category id; decorative, so it is hidden from screen readers. *@
+<svg class="category-icon" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+    @switch (Model)
+    {
+        case "klein":
+            <path d="M10.5 32H6v-6l5-7h16l7 6h6a2 2 0 0 1 2 2v5h-5.5M17.5 32h12M11 25h23M20 19v6" />
+            <circle cx="14" cy="32" r="3.5" />
+            <circle cx="33" cy="32" r="3.5" />
+            break;
+        case "middel":
+            <path d="M10.5 32H4v-5l5-1 6-7h15l6 6 6 1a2 2 0 0 1 2 2v4h-4.5M17.5 32h15M9 26h27M23 19v6.5" />
+            <circle cx="14" cy="32" r="3.5" />
+            <circle cx="36" cy="32" r="3.5" />
+            break;
+        case "luxe":
+            <path d="M10.5 32H3v-4.5l7-1.5 7-6h14l6 5.5 6 1a2 2 0 0 1 2 2V32h-4.5M17.5 32h16M10 26h27M24 20v6" />
+            <circle cx="14" cy="32" r="3.5" />
+            <circle cx="37" cy="32" r="3.5" />
+            <path d="m24 7 1.5 3 3.3.5-2.4 2.3.6 3.2-3-1.5-3 1.5.6-3.2-2.4-2.3 3.3-.5z" />
+            break;
+        case "kleine-bestelbus":
+            <path d="M10.5 33H5v-9l7-9h28a3 3 0 0 1 3 3v15h-5.5M17.5 33h13M12 15l-5.5 7H17v-7M24 15v18" />
+            <circle cx="14" cy="33" r="3.5" />
+            <circle cx="34" cy="33" r="3.5" />
+            break;
+        case "grote-bestelbus":
+            <path d="M9.5 35H4V22l9-13h31v26h-3.5M16.5 35h17M5.5 21 11 13h6v8zM17 9v26" />
+            <circle cx="13" cy="35" r="3.5" />
+            <circle cx="37" cy="35" r="3.5" />
+            break;
+        default:
+            <circle cx="24" cy="24" r="14" />
+            break;
+    }
+</svg>

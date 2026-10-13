@@ -1,0 +1,66 @@
+@using PoolCar.Web.Formatting
+@model NuModel
+<div id="nu-autos" class="section book-now-cars">
+    @if (Model.ErrorMessage is not null)
+    {
+        <p class="form-error" role="alert">@Model.ErrorMessage</p>
+    }
+
+    @if (Model.SelectedOffice is null)
+    {
+        <div class="empty-state">
+            <p class="empty-state-title">Er zijn nog geen vestigingen.</p>
+            <p>Zonder vestiging kan je geen auto nemen. Vraag het aan de balie.</p>
+        </div>
+    }
+    else if (Model.FreeUntil is null)
+    {
+        <div class="empty-state">
+            <h2 class="empty-state-title">Nu kan je geen auto boeken. Plan vooruit voor morgen.</h2>
+            <p>Je kan een auto nemen tussen 08:00 en 18:00.</p>
+            <a class="button" href="@Model.TomorrowUrl">Reserveer voor morgenochtend</a>
+        </div>
+    }
+    else
+    {
+        <h2 class="book-now-until">@Model.FreeUntil</h2>
+        @if (Model.Groups.Count == 0)
+        {
+            <div class="empty-state">
+                <p class="empty-state-title">Er is nu geen auto vrij in @Model.SelectedOffice.Name.</p>
+                <p>Kies een andere vestiging of reserveer vooruit.</p>
+                <a class="button" href="/reserveren?vestiging=@Model.SelectedOffice.Id">Auto reserveren</a>
+            </div>
+        }
+        else
+        {
+            <p class="muted">@Model.Groups.Sum(g => g.Cars.Count) auto's nu vrij in @Model.SelectedOffice.Name.</p>
+            @foreach (var group in Model.Groups)
+            {
+                <section class="book-now-category" aria-labelledby="nu-@group.Category.Id">
+                    <h3 id="nu-@group.Category.Id" class="book-now-category-title">
+                        <partial name="_CategoryIcon" model="group.Category.Id" />
+                        @group.Category.Name <span class="muted">(@group.Cars.Count)</span>
+                    </h3>
+                    <ul class="cards book-now-list">
+                        @foreach (var car in group.Cars)
+                        {
+                            <li class="card book-now-car">
+                                <p class="card-title">@car.Make @car.Model</p>
+                                <p class="plate">@LicensePlate.Format(car.Plate)</p>
+                                <p class="card-meta">@car.Colour · @car.RangeKm km bereik · @car.Seats zitplaatsen</p>
+                                <form method="post" asp-page="/Nu">
+                                    <input type="hidden" name="vestiging" value="@Model.SelectedOffice.Id" />
+                                    <input type="hidden" name="carId" value="@car.Plate" />
+                                    <button type="submit" class="button" hx-post="/nu" hx-target="#nu-autos" hx-swap="outerHTML" hx-indicator="this" hx-disabled-elt="this">
+                                        Neem deze auto<span class="visually-hidden">: @car.Make @car.Model @LicensePlate.Format(car.Plate)</span> <span class="spinner" aria-hidden="true"></span>
+                                    </button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
+                </section>
+            }
+        }
+    }
+</div>

@@ -1,0 +1,29 @@
+@page "/thuislocatie"
+@model ThuislocatieModel
+@{
+    ViewData["Title"] = "Thuislocatie";
+}
+
+<div class="container">
+    <h1>Thuislocatie</h1>
+    <p class="lead">Je thuislocatie is de vestiging waar we standaard een auto voor je zoeken.</p>
+
+    @if (Model.ErrorMessage is not null)
+    {
+        <p class="form-error" role="alert">@Model.ErrorMessage</p>
+    }
+
+    <form method="post">
+        <input type="hidden" asp-for="ReturnUrl" />
+        <fieldset>
+            <legend>Kies je vestiging</legend>
+            <div class="button-row">
+                @foreach (var office in Model.Offices)
+                {
+                    var current = office.Id == Model.HomeOffice;
+                    <button type="submit" name="Office" value="@office.Id" class="button button-large @(current ? "button-dark" : "button-secondary")" aria-pressed="@(current ? "true" : "false")">@office.Name</button>
+                }
+            </div>
+        </fieldset>
+    </form>
+</div>

@@ -1,0 +1,26 @@
+@model PoolCar.Web.Pages.Shared.Components.UserMenu.UserMenuModel
+<details class="menu user-menu">
+    <summary><span class="visually-hidden">Gebruikersmenu van </span><span class="menu-label">@Model.Name</span></summary>
+    <div class="menu-panel">
+        <p><strong>@Model.Name</strong></p>
+        <p class="muted">Thuislocatie: @(Model.HomeOfficeName ?? "niet ingesteld")</p>
+        @if (Model.HomeOffice is not null && Model.Offices.Count > 0)
+        {
+            <form method="post" asp-page="/Thuislocatie" class="stack">
+                <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+                <div class="form-field">
+                    <label for="thuislocatie">Thuislocatie wijzigen</label>
+                    <select id="thuislocatie" name="office">
+                        @foreach (var office in Model.Offices)
+                        {
+                            <option value="@office.Id" selected="@(office.Id == Model.HomeOffice)">@office.Name</option>
+                        }
+                    </select>
+                </div>
+                <button type="submit" class="button button-dark button-small">Opslaan</button>
+            </form>
+        }
+        <hr />
+        <a href="/.auth/logout">Afmelden</a>
+    </div>
+</details>

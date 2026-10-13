@@ -1,0 +1,48 @@
+@using PoolCar.Web.Formatting
+@model WagenparkModel
+
+@if (Model.SelectedOffice is null)
+{
+    <div class="empty-state">
+        <p class="empty-state-title">Er zijn nog geen vestigingen.</p>
+        <p>Zodra er een vestiging met auto's is, zie je ze hier. Vraag de balie als je nu een auto nodig hebt.</p>
+    </div>
+}
+else if (Model.Groups.Count == 0)
+{
+    <div class="empty-state">
+        <p class="empty-state-title">
+            @(Model.SelectedCategory is null
+                ? $"Er staan geen auto's in {Model.SelectedOffice.Name}."
+                : $"Er staan geen auto's in de categorie {Model.SelectedCategory.Name} in {Model.SelectedOffice.Name}.")
+        </p>
+        <p>Kies een andere vestiging of categorie.</p>
+        <a class="button button-secondary" href="/wagenpark?vestiging=@Model.SelectedOffice.Id">Alle auto's in @Model.SelectedOffice.Name</a>
+    </div>
+}
+else
+{
+    <p class="fleet-count" aria-live="polite">@Model.CarCount @(Model.CarCount == 1 ? "auto" : "auto's") in @Model.SelectedOffice.Name</p>
+
+    @foreach (var group in Model.Groups)
+    {
+        <section class="fleet-group" aria-labelledby="categorie-@group.Category.Id">
+            <h2 id="categorie-@group.Category.Id" class="fleet-group-title">
+                <partial name="_CategoryIcon" model="group.Category.Id" />
+                <span>@group.Summary</span>
+            </h2>
+            <ul class="cards fleet-cards">
+                @foreach (var car in group.Cars)
+                {
+                    <li>
+                        <a class="card car-card" href="/auto/@Uri.EscapeDataString(car.Plate)">
+                            <span class="card-title">@car.Make @car.Model</span>
+                            <span class="plate">@LicensePlate.Format(car.Plate)</span>
+                            <span class="card-meta">@car.Colour · @car.RangeKm km bereik · @car.Seats zitplaatsen</span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </section>
+    }
+}

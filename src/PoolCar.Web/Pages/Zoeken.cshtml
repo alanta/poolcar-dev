@@ -1,0 +1,47 @@
+@page "/zoeken"
+@using PoolCar.Web.Formatting
+@model ZoekenModel
+@{
+    ViewData["Title"] = "Kenteken zoeken";
+}
+
+<div class="container">
+    <h1>Kenteken zoeken</h1>
+    <partial name="_PlateSearchForm" model="Model.Query ?? string.Empty" />
+
+    @if (Model.HasQuery)
+    {
+        <section class="section" aria-labelledby="zoekresultaten">
+            @if (Model.Results.Count == 0)
+            {
+                <h2 id="zoekresultaten" class="visually-hidden">Zoekresultaten</h2>
+                <div class="empty-state">
+                    <p class="empty-state-title">Geen auto gevonden voor '@Model.Query'.</p>
+                    <p>Zoek opnieuw, of bekijk alle auto's in het Wagenpark.</p>
+                    <a class="button button-secondary" href="/wagenpark">Naar het Wagenpark</a>
+                </div>
+            }
+            else
+            {
+                <h2 id="zoekresultaten">@Model.Results.Count auto's gevonden voor '@Model.Query'</h2>
+                <ul class="cards fleet-cards">
+                    @foreach (var result in Model.Results)
+                    {
+                        var car = result.Car;
+                        <li>
+                            <a class="card car-card" href="/auto/@Uri.EscapeDataString(car.Plate)">
+                                <span class="plate">@LicensePlate.Format(car.Plate)</span>
+                                <span class="card-title">@car.Make @car.Model</span>
+                                <span class="card-meta">Vestiging @result.OfficeName</span>
+                            </a>
+                        </li>
+                    }
+                </ul>
+                @if (Model.Results.Count >= 10)
+                {
+                    <p class="form-hint section">Staat de auto er niet bij? Typ meer van het kenteken.</p>
+                }
+            }
+        </section>
+    }
+</div>

@@ -1,0 +1,40 @@
+@page "/planning"
+@model PlanningModel
+@{
+    ViewData["Title"] = "Planning";
+}
+
+<div class="container planning-page">
+    <h1>Planning</h1>
+    <p class="lead">Hoe druk is het? Bekijk per week welke auto's bezet zijn en klik op een vrij dagdeel om te reserveren.</p>
+
+    <form id="planning-filters" class="form-row planning-filters" method="get" action="/planning"
+          hx-get="/planning" hx-target="#planning-board" hx-push-url="true"
+          hx-trigger="change, submit" hx-sync="this:replace" hx-indicator="#planning-spinner">
+        <div class="form-field">
+            <label for="planning-vestiging">Vestiging</label>
+            <select id="planning-vestiging" name="vestiging">
+                @foreach (var office in Model.Offices)
+                {
+                    <option value="@office.Id" selected="@(office.Id == Model.SelectedOffice?.Id)">@office.Name</option>
+                }
+            </select>
+        </div>
+        <div class="form-field">
+            <label for="planning-categorie">Categorie</label>
+            <select id="planning-categorie" name="categorie">
+                @foreach (var category in Model.Categories)
+                {
+                    <option value="@category.Id" selected="@(category.Id == Model.SelectedCategory)">@category.Name</option>
+                }
+                <option value="@PlanningModel.AllCategories" selected="@(Model.SelectedCategory == PlanningModel.AllCategories)">Alle categorieën</option>
+            </select>
+        </div>
+        <input type="hidden" id="planning-week" name="week" value="@Model.WeekValue" />
+        <button type="submit" class="button button-dark">Toon <span id="planning-spinner" class="spinner" aria-hidden="true"></span></button>
+    </form>
+
+    <div id="planning-board" class="planning-board">
+        <partial name="@PlanningModel.BoardPartial" model="Model" />
+    </div>
+</div>

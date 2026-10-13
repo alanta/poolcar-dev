@@ -1,0 +1,112 @@
+@using PoolCar.Web.Formatting
+@using PoolCar.Web.Planning
+@model PlanningModel
+@{
+    var thisMonday = PlanningGrid.MondayOf(Model.Today);
+}
+
+@if (Context.Request.IsHtmxPartial())
+{
+    <input type="hidden" id="planning-week" name="week" value="@Model.WeekValue" hx-swap-oob="true" />
+}
+
+<div class="planning-toolbar">
+    <h2 id="planning-week-title">@Model.WeekText</h2>
+    <nav class="button-row" aria-label="Week kiezen">
+        @foreach (var (monday, text) in new[] { (Model.Monday.AddDays(-7), "Vorige"), (thisMonday, "Deze week"), (Model.Monday.AddDays(7), "Volgende") })
+        {
+            var url = Model.WeekUrl(monday);
+            <a class="button button-secondary button-small" href="@url"
+               hx-get="@url" hx-target="#planning-board" hx-push-url="true" hx-indicator="#planning-spinner"
+               aria-current="@(monday == Model.Monday ? "true" : null)">@text</a>
+        }
+    </nav>
+</div>
+
+<ul class="planning-legend" aria-label="Legenda">
+    <li><span class="planning-swatch slot-vrij" aria-hidden="true"></span>Vrij</li>
+    <li><span class="planning-swatch slot-gereserveerd" aria-hidden="true"></span>Gereserveerd</li>
+    <li><span class="planning-swatch slot-opgehaald" aria-hidden="true"></span>Opgehaald</li>
+    <li><span class="planning-swatch slot-te-laat" aria-hidden="true"></span>Te laat</li>
+    <li><span class="planning-swatch slot-gereserveerd is-mine" aria-hidden="true"></span>Jouw reservering</li>
+</ul>
+
+@if (Model.SelectedOffice is null)
+{
+    <div class="empty-state">
+        <p class="empty-state-title">Er zijn nog geen vestigingen.</p>
+        <p>Probeer het later opnieuw.</p>
+    </div>
+}
+else if (Model.Rows.Count == 0)
+{
+    <div class="empty-state">
+        <p class="empty-state-title">Geen auto's in @Model.SelectedCategoryName in @Model.SelectedOffice.Name.</p>
+        <p>Kies een andere categorie of vestiging.</p>
+    </div>
+}
+else
+{
+    <div class="planning-scroll" tabindex="0" role="region" aria-labelledby="planning-week-title">
+        <table class="planning-grid">
+            <caption class="visually-hidden">Planning @Model.SelectedOffice.Name, @Model.SelectedCategoryName, @Model.WeekText</caption>
+            <thead>
+                <tr>
+                    <th scope="col" rowspan="2" class="planning-car">Auto</th>
+                    @foreach (var date in Model.Dates)
+                    {
+                        <th scope="colgroup" colspan="2" class="planning-day @(date == Model.Today ? "is-today" : null)"
+                            aria-current="@(date == Model.Today ? "date" : null)">@DutchDate.DayAndNumber(date)</th>
+                    }
+                </tr>
+                <tr>
+                    @foreach (var date in Model.Dates)
+                    {
+                        foreach (var half in PlanningGrid.Halves)
+                        {
+                            <th scope="col" class="planning-half" title="@DayPartText.Label(half) @DayPartText.Hours(half)">
+                                <span aria-hidden="true">@DayPartText.Label(half)[..1]</span><span class="visually-hidden">@DayPartText.Label(half)</span>
+                            </th>
+                        }
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in Model.Rows)
+                {
+                    var carName = $"{row.Car.Make} {row.Car.Model}";
+                    var plate = LicensePlate.Format(row.Car.Plate);
+                    <tr>
+                        <th scope="row" class="planning-car">
+                            <a href="/auto/@row.Car.Plate">@carName</a>
+                            <span class="plate">@plate</span>
+                        </th>
+                        @foreach (var slot in row.Slots)
+                        {
+                            var classes = string.Join(' ', new[]
+                            {
+                                "slot",
+                                $"slot-{slot.StateName}",
+                                slot.Half == PoolCar.Web.Clients.DayPart.Morning ? "slot-morning" : "slot-afternoon",
+                                slot.IsMine ? "is-mine" : null,
+                                slot.IsPast ? "is-past" : null,
+                                slot.IsFullDay ? "is-full-day" : null,
+                            }.Where(c => c is not null));
+                            <td class="@classes" title="@slot.Title" data-date="@slot.Date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)"
+                                data-dagdeel="@DayPartText.Slug(slot.Half)" data-state="@slot.StateName" data-mine="@(slot.IsMine ? "true" : "false")">
+                                @if (slot.CanReserve)
+                                {
+                                    <a class="slot-link" href="@Model.ReserveUrl(row.Car, slot)"><span class="visually-hidden">Vrij, reserveer @carName @plate op @DutchDate.Short(slot.Date), @DayPartText.Label(slot.Half).ToLowerInvariant()</span></a>
+                                }
+                                else
+                                {
+                                    <span class="visually-hidden">@slot.Label</span>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

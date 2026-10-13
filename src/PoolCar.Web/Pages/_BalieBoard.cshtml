@@ -1,0 +1,169 @@
+@model BalieModel
+@using PoolCar.Web.Desk
+@using PoolCar.Web.Formatting
+@{
+    var board = Model.Board;
+
+    void Who(DeskItem item)
+    {
+        <p class="balie-who">
+            <strong>@item.Period.EmployeeFirstName</strong>
+            <span>@item.CarText</span>
+            <span class="plate">@LicensePlate.Format(item.Car.Plate)</span>
+        </p>
+    }
+
+    async Task Action(DeskItem item, string handler, string text)
+    {
+        <form method="post" asp-page-handler="@handler" class="balie-action"
+              hx-post="/balie?handler=@handler" hx-target="#balie-board" hx-swap="outerHTML"
+              hx-sync="#balie-board:replace" hx-indicator="find .spinner" hx-disabled-elt="find button">
+            <input type="hidden" name="id" value="@item.Period.PeriodId" />
+            <input type="hidden" name="vestiging" value="@Model.SelectedOffice?.Id" />
+            <input type="hidden" name="datum" value="@Model.DateValue" />
+            <button type="submit" class="button button-dark button-small">
+                @text<span class="visually-hidden">: @item.CarText @LicensePlate.Format(item.Car.Plate) van @item.Period.EmployeeFirstName</span>
+                <span class="spinner" aria-hidden="true"></span>
+            </button>
+        </form>
+    }
+
+    void Empty(string text)
+    {
+        <p class="balie-empty muted">@text</p>
+    }
+}
+<section id="balie-board" class="balie-board" aria-labelledby="balie-title"
+         hx-get="@Model.BoardUrl" hx-trigger="every 30s" hx-swap="outerHTML" hx-sync="this:drop">
+    <div class="balie-status">
+        <h2 id="balie-title">@Model.DateText@(Model.SelectedOffice is null ? "" : $" · {Model.SelectedOffice.Name}")</h2>
+        <p class="balie-counters" data-counters><strong>@Model.Counters</strong></p>
+        <p class="balie-updated muted">bijgewerkt @Model.UpdatedAt</p>
+    </div>
+
+    @if (Model.SelectedOffice is null)
+    {
+        <div class="empty-state">
+            <p class="empty-state-title">Geen vestigingen gevonden.</p>
+            <p>Probeer het later opnieuw.</p>
+        </div>
+    }
+    else
+    {
+        <div class="balie-columns">
+            <section class="balie-column" data-section="ophalen" aria-labelledby="balie-ophalen">
+                <h3 id="balie-ophalen">Ophalen <span class="badge">@board.PickUps.Count</span></h3>
+                @if (board.PickUps.Count == 0)
+                {
+                    Empty(Model.IsToday ? "Vandaag komt niemand meer een auto ophalen. Kies een andere datum om vooruit te kijken." : "Op deze dag komt niemand een auto ophalen. Kies een andere datum.");
+                }
+                else
+                {
+                    <ul class="balie-list">
+                        @foreach (var item in board.PickUps)
+                        {
+                            <li class="balie-item@(item.Period.NotPickedUp ? " is-muted" : "")" data-period="@item.Period.PeriodId">
+                                <p class="balie-time">@item.TimeText</p>
+                                @{ Who(item); }
+                                @if (item.Period.NotPickedUp)
+                                {
+                                    <p><span class="badge">Niet opgehaald</span></p>
+                                }
+                                else if (item.CanPickUp)
+                                {
+                                    await Action(item, "PickUp", "Uitgegeven");
+                                }
+                                else
+                                {
+                                    <p class="balie-note muted">Uitgeven vanaf @item.StartTime</p>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+
+            <section class="balie-column" data-section="onderweg" aria-labelledby="balie-onderweg">
+                <h3 id="balie-onderweg">Onderweg <span class="badge">@board.OnTheWay.Count</span></h3>
+                @if (board.OnTheWay.Count == 0)
+                {
+                    Empty("Er zijn geen auto's onderweg die later terugkomen.");
+                }
+                else
+                {
+                    <ul class="balie-list">
+                        @foreach (var item in board.OnTheWay)
+                        {
+                            <li class="balie-item" data-period="@item.Period.PeriodId">
+                                <p class="balie-time">@item.TimeText</p>
+                                @{ Who(item); }
+                                <p class="balie-note muted">Terug om @item.ReturnTime</p>
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+
+            <section class="balie-column" data-section="inleveren" aria-labelledby="balie-inleveren">
+                <h3 id="balie-inleveren">Inleveren verwacht <span class="badge badge-info">@board.DueBack.Count</span></h3>
+                @if (board.DueBack.Count == 0)
+                {
+                    Empty("De komende 2 uur wordt er geen auto terugverwacht.");
+                }
+                else
+                {
+                    <ul class="balie-list">
+                        @foreach (var item in board.DueBack)
+                        {
+                            <li class="balie-item" data-period="@item.Period.PeriodId">
+                                <p class="balie-time">@item.TimeText</p>
+                                @{ Who(item); }
+                                <p class="balie-note muted">Terug om @item.ReturnTime</p>
+                                @{ await Action(item, "Return", "Ingeleverd"); }
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+
+            <section class="balie-column balie-column-overdue" data-section="te-laat" aria-labelledby="balie-te-laat">
+                <h3 id="balie-te-laat">Te laat <span class="badge badge-overdue">@board.Overdue.Count</span></h3>
+                @if (board.Overdue.Count == 0)
+                {
+                    Empty("Alle auto's zijn op tijd terug. Hier verschijnt een auto zodra hij te laat is.");
+                }
+                else
+                {
+                    <ul class="balie-list">
+                        @foreach (var item in board.Overdue)
+                        {
+                            <li class="balie-item is-overdue" data-period="@item.Period.PeriodId">
+                                <p class="balie-time">@DutchDate.Short(item.Period.Date) · @item.TimeText</p>
+                                @{ Who(item); }
+                                <p class="balie-note">Had om @item.ReturnTime terug moeten zijn</p>
+                                @if (item.AtRisk.Count > 0)
+                                {
+                                    <div class="balie-risk">
+                                        <p><strong>Boekingen in gevaar</strong></p>
+                                        <ul>
+                                            @foreach (var risk in item.AtRisk)
+                                            {
+                                                <li>@risk.EmployeeFirstName · @DutchDate.Short(risk.Date) · @DayPartText.Label(risk.DayPart)</li>
+                                            }
+                                        </ul>
+                                    </div>
+                                }
+                                @{ await Action(item, "Return", "Ingeleverd"); }
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+        </div>
+    }
+
+    @if (Model.Toast is not null)
+    {
+        <partial name="@PoolCar.Web.Htmx.Toast.OutOfBandPartial" model="Model.Toast" />
+    }
+</section>

@@ -1,9 +1,15 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Options;
 using PoolCar.Web.Auth;
+using PoolCar.Web.Availability;
 using PoolCar.Web.Clients;
+using PoolCar.Web.Employees;
+using PoolCar.Web.Offices;
+using PoolCar.Web.Onboarding;
+using PoolCar.Web.Schedule;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
@@ -25,17 +31,33 @@ builder.Services.AddHttpClient<FleetApiClient>((sp, client) =>
     client.BaseAddress = options.BaseAddress;
 });
 
-builder.Services.AddHttpClient<ReservationsClient>((sp, client) =>
-{
-    var options = sp.GetRequiredService<IOptions<ReservationsApiOptions>>().Value;
-    client.BaseAddress = options.BaseAddress;
-});
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<ActingUserHandler>();
+builder.Services.AddHttpClient<ReservationsApiClient>((sp, client) =>
+    {
+        var options = sp.GetRequiredService<IOptions<ReservationsApiOptions>>().Value;
+        client.BaseAddress = options.BaseAddress;
+    })
+    .AddHttpMessageHandler<ActingUserHandler>();
+
+// A retried write could store a booking twice, so API clients only retry reads
+builder.Services.ConfigureAll<HttpStandardResilienceOptions>(options => options.Retry.DisableForUnsafeHttpMethods());
+
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<CurrentEmployee>();
+builder.Services.AddScoped<OfficeDirectory>();
+builder.Services.AddScoped<AvailabilityService>();
+builder.Services.AddScoped<ScheduleService>();
 
 // Configure EasyAuth as default authentication scheme
 builder.Services.AddAuthentication(EasyAuthAuthenticationDefaults.AuthenticationScheme)
     .AddEasyAuth();
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy(PoolCarPolicies.Operator, policy => policy
+        .RequireAuthenticatedUser()
+        .RequireClaim(EasyAuthClaimTypes.Roles, PoolCarRoles.FleetOperator));
 
 var dutchCulture = new CultureInfo("nl-NL");
 builder.Services.Configure<RequestLocalizationOptions>(options =>
@@ -52,21 +74,25 @@ builder.Services.AddAntiforgery(options =>
 
 // Add services to the container and require authentication on all pages
 builder.Services.AddRazorPages(options =>
-{
-    options.Conventions.AuthorizeFolder("/");
-});
+    {
+        options.Conventions.AuthorizeFolder("/");
+    })
+    .AddMvcOptions(options => options.Filters.Add<OnboardingPageFilter>());
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error");
+    app.UseExceptionHandler("/fout");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
+
+// Show the Dutch error page for error status codes without a body, such as 404 and 403
+app.UseStatusCodePagesWithReExecute("/fout/{0}");
 
 app.UseRequestLocalization();
 

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using PoolCar.Web.Clients;
+using PoolCar.Web.Tests.Support;
 
 namespace PoolCar.Web.Tests;
 
@@ -88,6 +89,63 @@ public class FleetApiClientTests
 
         Assert.Equal("/cars?office=amsterdam", handler.LastRequestUri?.PathAndQuery);
     }
+
+    [Fact]
+    public async Task GetCarAsync_EscapesPlate_AndReturnsCar()
+    {
+        var handler = new StubHttpHandler().OnJson(HttpMethod.Get, "/cars/HPN72V", CarsJson.Trim()[1..^1]);
+
+        var car = await CreateClient(handler).GetCarAsync("HPN72V", TestContext.Current.CancellationToken);
+
+        Assert.Equal("Niro", car?.Model);
+    }
+
+    [Fact]
+    public async Task GetCarAsync_WhenUnknown_ReturnsNull()
+    {
+        var car = await CreateClient(new StubHttpHandler()).GetCarAsync("XX99XX", TestContext.Current.CancellationToken);
+
+        Assert.Null(car);
+    }
+
+    [Fact]
+    public async Task GetCarsByPlatesAsync_SplitsLargeRequests()
+    {
+        var handler = new StubHttpHandler().OnJson(HttpMethod.Get, "/cars", CarsJson);
+        var plates = Enumerable.Range(0, 201).Select(i => $"P{i}").ToList();
+
+        var cars = await CreateClient(handler).GetCarsByPlatesAsync(plates, TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, cars.Count);
+        Assert.Equal(2, handler.Requests.Count);
+        Assert.StartsWith("/cars?plates=P0,P1,", handler.Requests[0].PathAndQuery);
+        Assert.Equal("/cars?plates=P200", handler.Requests[1].PathAndQuery);
+    }
+
+    [Fact]
+    public async Task SearchCarsAsync_EscapesQuery()
+    {
+        var handler = new StubHttpHandler().OnJson(HttpMethod.Get, "/cars/search", CarsJson);
+
+        var cars = await CreateClient(handler).SearchCarsAsync("hpn 72", TestContext.Current.CancellationToken);
+
+        Assert.Single(cars);
+        Assert.Equal("/cars/search?q=hpn%2072", handler.Requests.Single().PathAndQuery);
+    }
+
+    [Fact]
+    public async Task SearchCarsAsync_WithEmptyQuery_DoesNotCallFleet()
+    {
+        var handler = new StubHttpHandler();
+
+        var cars = await CreateClient(handler).SearchCarsAsync(" ", TestContext.Current.CancellationToken);
+
+        Assert.Empty(cars);
+        Assert.Empty(handler.Requests);
+    }
+
+    private static FleetApiClient CreateClient(StubHttpHandler handler) =>
+        new(new HttpClient(handler) { BaseAddress = new Uri("http://fleet") });
 
     private static FleetApiClient CreateClient(FakeHandler handler) =>
         new(new HttpClient(handler) { BaseAddress = new Uri("http://fleet") });

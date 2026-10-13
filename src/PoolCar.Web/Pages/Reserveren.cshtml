@@ -1,0 +1,71 @@
+@page "/reserveren"
+@using PoolCar.Web.Clients
+@using PoolCar.Web.Formatting
+@model ReserverenModel
+@{
+    ViewData["Title"] = "Auto reserveren";
+    var dayParts = new[] { DayPart.Morning, DayPart.Afternoon, DayPart.FullDay };
+}
+
+<div class="container reserve-page">
+    <h1>Auto reserveren</h1>
+    <p class="lead">Kies wanneer en waar je een auto nodig hebt. Daarna zie je welke auto's vrij zijn.</p>
+
+    <form id="@ReserverenModel.FormId" class="reserve-when section" method="get" action="/reserveren"
+          hx-get="/reserveren" hx-target="#reserve-steps" hx-push-url="true"
+          hx-trigger="change delay:300ms, submit" hx-indicator="#reserve-when-spinner">
+        <h2 class="visually-hidden">Wanneer en waar</h2>
+        <div class="form-row">
+            @if (Model.PreselectedCar is { } preselected)
+            {
+                <input type="hidden" name="vestiging" value="@preselected.Office" />
+                <div class="form-field">
+                    <span class="reserve-label">Vestiging</span>
+                    <span class="reserve-fixed">@(Model.SelectedOffice?.Name ?? preselected.Office)</span>
+                </div>
+            }
+            else
+            {
+                <div class="form-field">
+                    <label for="vestiging">Vestiging</label>
+                    <select id="vestiging" name="vestiging">
+                        @foreach (var office in Model.Offices)
+                        {
+                            <option value="@office.Id" selected="@(office.Id == Model.SelectedOffice?.Id)">@office.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+            <div class="form-field">
+                <label for="van">Van</label>
+                <input id="van" name="van" type="date" value="@Model.FromValue" min="@ReserverenModel.Format(Model.Today)" required />
+            </div>
+            <div class="form-field">
+                <label for="tot">Tot en met</label>
+                <input id="tot" name="tot" type="date" value="@Model.ToValue" min="@ReserverenModel.Format(Model.Today)" required />
+            </div>
+        </div>
+
+        <fieldset class="reserve-day-part">
+            <legend>Dagdeel</legend>
+            <div class="segmented">
+                @foreach (var dayPart in dayParts)
+                {
+                    <label>
+                        <input type="radio" name="dagdeel" value="@DayPartText.Slug(dayPart)" checked="@(dayPart == Model.DayPart)" />
+                        <span>@DayPartText.Label(dayPart) <small>@DayPartText.ShortHours(dayPart)</small></span>
+                    </label>
+                }
+            </div>
+        </fieldset>
+
+        <div class="button-row">
+            <button type="submit" class="button button-dark">Toon vrije auto's</button>
+            <span id="reserve-when-spinner" class="spinner" aria-hidden="true"></span>
+        </div>
+    </form>
+
+    <div id="reserve-steps" class="reserve-steps">
+        <partial name="@ReserverenModel.StepsPartial" model="Model" />
+    </div>
+</div>

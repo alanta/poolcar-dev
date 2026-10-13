@@ -1,0 +1,25 @@
+@page "/nu"
+@model NuModel
+@{
+    ViewData["Title"] = "Nu een auto";
+}
+
+<div class="container book-now">
+    <h1>Nu een auto</h1>
+    <p class="lead">Sta je op kantoor en moet je nu weg? Neem een auto die nu vrij is. Je haalt hem meteen op.</p>
+
+    <form method="get" class="form-row" hx-get="/nu" hx-target="#nu-autos" hx-swap="outerHTML" hx-push-url="true" hx-trigger="change, submit">
+        <div class="form-field">
+            <label for="vestiging">Vestiging</label>
+            <select id="vestiging" name="vestiging">
+                @foreach (var office in Model.Offices)
+                {
+                    <option value="@office.Id" selected="@(office.Id == Model.SelectedOffice?.Id)">@office.Name</option>
+                }
+            </select>
+        </div>
+        <button type="submit" class="button button-dark">Bekijk</button>
+    </form>
+
+    <partial name="@NuModel.CarsPartial" model="Model" />
+</div>

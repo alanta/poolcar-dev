@@ -1,0 +1,31 @@
+@page "/balie"
+@model BalieModel
+@{
+    ViewData["Title"] = "Balie";
+}
+
+<div class="container balie-page">
+    <h1>Balie</h1>
+    <p class="lead">Geef auto's uit, neem ze weer in en houd de auto's in de gaten die te laat zijn.</p>
+
+    <form id="balie-filters" class="form-row balie-filters" method="get" action="/balie"
+          hx-get="/balie" hx-target="#balie-board" hx-swap="outerHTML" hx-push-url="true"
+          hx-trigger="change, submit" hx-sync="this:replace" hx-indicator="#balie-spinner">
+        <div class="form-field">
+            <label for="balie-vestiging">Vestiging</label>
+            <select id="balie-vestiging" name="vestiging">
+                @foreach (var office in Model.Offices)
+                {
+                    <option value="@office.Id" selected="@(office.Id == Model.SelectedOffice?.Id)">@office.Name</option>
+                }
+            </select>
+        </div>
+        <div class="form-field">
+            <label for="balie-datum">Datum</label>
+            <input id="balie-datum" name="datum" type="date" value="@Model.DateValue" />
+        </div>
+        <button type="submit" class="button button-dark">Toon <span id="balie-spinner" class="spinner" aria-hidden="true"></span></button>
+    </form>
+
+    <partial name="@BalieModel.BoardPartial" model="Model" />
+</div>
