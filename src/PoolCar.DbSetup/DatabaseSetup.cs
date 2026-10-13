@@ -8,16 +8,15 @@ namespace PoolCar.DbSetup;
 /// <summary>Opens a connection pool to a database on the server as the administrator.</summary>
 public delegate NpgsqlDataSource DataSourceFactory(string database);
 
-/// <summary>Creates a database owned by a principal, idempotently.</summary>
+/// <summary>
+/// Creates and migrates a database owned by the administrator, idempotently, and gives a principal access to its data.
+/// </summary>
 public sealed partial class DatabaseSetup(
     DataSourceFactory dataSources, IPrincipals principals, ILogger<DatabaseSetup> logger)
 {
-    private const string HoldingRole = "poolcar_dbsetup_holder";
-
     public async Task RunAsync(DbSetupOptions options, CancellationToken cancellationToken)
     {
         var database = Identifier.Quote(options.Database);
-        var principal = Identifier.Quote(options.Principal);
 
         await using (var server = dataSources("postgres"))
         {
@@ -26,7 +25,7 @@ public sealed partial class DatabaseSetup(
                 await ResetAsync(server, options, database, cancellationToken);
             }
 
-            if (await ExistsAsync(server, "SELECT 1 FROM pg_database WHERE datname = $1", options.Database, cancellationToken))
+            if (await ExistsAsync(server, "SELECT 1 FROM pg_database WHERE datname = $1", [options.Database], cancellationToken))
             {
                 LogDatabaseExists(options.Database);
             }
@@ -37,7 +36,7 @@ public sealed partial class DatabaseSetup(
             }
 
             var objectId = Guid.Parse(options.PrincipalObjectId);
-            if (!await ExistsAsync(server, "SELECT 1 FROM pg_roles WHERE rolname = $1", options.Principal, cancellationToken))
+            if (!await ExistsAsync(server, "SELECT 1 FROM pg_roles WHERE rolname = $1", [options.Principal], cancellationToken))
             {
                 LogCreatingPrincipal(options.Principal);
                 await using var connection = await server.OpenConnectionAsync(cancellationToken);
@@ -45,6 +44,8 @@ public sealed partial class DatabaseSetup(
             }
             else
             {
+                await TakeOwnershipAsync(server, options, cancellationToken);
+
                 var boundTo = await GetObjectIdAsync(server, options.Principal, cancellationToken);
                 if (boundTo == objectId)
                 {
@@ -57,20 +58,21 @@ public sealed partial class DatabaseSetup(
                     await ReplacePrincipalAsync(options.Database, options.Principal, objectId, cancellationToken);
                 }
             }
-
-            // Changing the owner requires being able to SET ROLE to the new owner when the administrator isn't a superuser.
-            if (!await ExistsAsync(server, "SELECT 1 WHERE pg_has_role(current_user, $1, 'SET')", options.Principal, cancellationToken))
-            {
-                LogGrantingMembership(options.Principal);
-                await ExecuteAsync(server, $"GRANT {principal} TO CURRENT_USER", cancellationToken);
-            }
-
-            LogChangingOwner(options.Database, options.Principal);
-            await ExecuteAsync(server, $"ALTER DATABASE {database} OWNER TO {principal}", cancellationToken);
         }
 
         await using (var target = dataSources(options.Database))
         {
+            // First, so the principal keeps access to the data when a later step fails. The default privileges
+            // cover the tables and sequences that the migrations create.
+            LogGrantingDataAccess(options.Principal, options.Database);
+            await using (var connection = await target.OpenConnectionAsync(cancellationToken))
+            {
+                foreach (var statement in GrantDataAccess(database, Identifier.Quote(options.Principal)))
+                {
+                    await ExecuteAsync(connection, statement, cancellationToken);
+                }
+            }
+
             LogCreatingExtension(options.Database);
             await ExecuteAsync(target, "CREATE EXTENSION IF NOT EXISTS btree_gist", cancellationToken);
 
@@ -80,6 +82,31 @@ public sealed partial class DatabaseSetup(
 
         LogDone(options.Database);
     }
+
+    /// <summary>
+    /// Lets the principal read and write the data in schema public, also in the tables and sequences that the
+    /// administrator creates later, but not change the schema.
+    /// </summary>
+    private static string[] GrantDataAccess(string database, string principal) =>
+    [
+        $"GRANT CONNECT ON DATABASE {database} TO {principal}",
+        $"GRANT USAGE ON SCHEMA public TO {principal}",
+        $"GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO {principal}",
+        $"GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO {principal}",
+        $"ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO {principal}",
+        $"ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO {principal}",
+    ];
+
+    /// <summary>Revokes what <see cref="GrantDataAccess"/> grants.</summary>
+    private static string[] RevokeDataAccess(string database, string principal) =>
+    [
+        $"ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON SEQUENCES FROM {principal}",
+        $"ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON TABLES FROM {principal}",
+        $"REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM {principal}",
+        $"REVOKE ALL ON ALL TABLES IN SCHEMA public FROM {principal}",
+        $"REVOKE ALL ON SCHEMA public FROM {principal}",
+        $"REVOKE ALL ON DATABASE {database} FROM {principal}",
+    ];
 
     private static ReservationsDbContext CreateContext(NpgsqlDataSource dataSource) =>
         new(new DbContextOptionsBuilder<ReservationsDbContext>()
@@ -103,7 +130,7 @@ public sealed partial class DatabaseSetup(
     private async Task ResetAsync(
         NpgsqlDataSource server, DbSetupOptions options, string database, CancellationToken cancellationToken)
     {
-        if (!await ExistsAsync(server, "SELECT 1 FROM pg_database WHERE datname = $1", options.Database, cancellationToken))
+        if (!await ExistsAsync(server, "SELECT 1 FROM pg_database WHERE datname = $1", [options.Database], cancellationToken))
         {
             LogNothingToReset(options.Database);
             return;
@@ -114,6 +141,42 @@ public sealed partial class DatabaseSetup(
         await ExecuteAsync(server, $"DROP DATABASE IF EXISTS {database} WITH (FORCE)", cancellationToken);
     }
 
+    /// <summary>
+    /// Makes the administrator the owner of a database that the principal owns, and of the principal's objects in it.
+    /// </summary>
+    private async Task TakeOwnershipAsync(
+        NpgsqlDataSource server, DbSetupOptions options, CancellationToken cancellationToken)
+    {
+        if (!await ExistsAsync(
+            server,
+            "SELECT 1 FROM pg_database d JOIN pg_roles r ON r.oid = d.datdba WHERE d.datname = $1 AND r.rolname = $2",
+            [options.Database, options.Principal],
+            cancellationToken))
+        {
+            return;
+        }
+
+        LogTakingOwnership(options.Database, options.Principal);
+        await using var database = dataSources(options.Database);
+        await using var connection = await database.OpenConnectionAsync(cancellationToken);
+        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+
+        // REASSIGN OWNED and changing the owner of the database need the privileges of the principal.
+        await using (var command = new NpgsqlCommand("SELECT 1 WHERE pg_has_role(current_user, $1, 'USAGE')", connection))
+        {
+            command.Parameters.Add(new NpgsqlParameter { Value = options.Principal });
+            if (await command.ExecuteScalarAsync(cancellationToken) is null)
+            {
+                await ExecuteAsync(connection, $"GRANT {Identifier.Quote(options.Principal)} TO CURRENT_USER", cancellationToken);
+            }
+        }
+
+        await ExecuteAsync(connection, $"REASSIGN OWNED BY {Identifier.Quote(options.Principal)} TO CURRENT_USER", cancellationToken);
+        await ExecuteAsync(connection, $"ALTER DATABASE {Identifier.Quote(options.Database)} OWNER TO CURRENT_USER", cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
+    }
+
     private async Task<Guid?> GetObjectIdAsync(
         NpgsqlDataSource server, string principal, CancellationToken cancellationToken)
     {
@@ -122,51 +185,38 @@ public sealed partial class DatabaseSetup(
     }
 
     /// <summary>
-    /// Drops the role and creates it again for the object ID. Its objects in the database move to a holding role
-    /// in between, so the new role owns them. Runs in one transaction, so a failure leaves the old role in place.
+    /// Drops the role and creates it again for the object ID, after revoking its privileges, which would otherwise
+    /// block dropping it. Runs in one transaction, so a failure leaves the old role in place.
     /// </summary>
     private async Task ReplacePrincipalAsync(
         string databaseName, string principalName, Guid objectId, CancellationToken cancellationToken)
     {
         var principal = Identifier.Quote(principalName);
-        var holder = Identifier.Quote(HoldingRole);
 
         await using var database = dataSources(databaseName);
         await using var connection = await database.OpenConnectionAsync(cancellationToken);
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
 
-        // REASSIGN OWNED and DROP OWNED need the privileges of the roles involved.
-        await ExecuteAsync(connection, $"CREATE ROLE {holder} NOLOGIN", cancellationToken);
-        await ExecuteAsync(connection, $"GRANT {holder} TO CURRENT_USER", cancellationToken);
-        await GrantMembershipIfMissingAsync(connection, principalName, cancellationToken);
-        await ExecuteAsync(connection, $"REASSIGN OWNED BY {principal} TO {holder}", cancellationToken);
-        await ExecuteAsync(connection, $"DROP OWNED BY {principal}", cancellationToken);
-        await ExecuteAsync(connection, $"DROP ROLE {principal}", cancellationToken);
+        foreach (var statement in RevokeDataAccess(Identifier.Quote(databaseName), principal))
+        {
+            await ExecuteAsync(connection, statement, cancellationToken);
+        }
 
+        await ExecuteAsync(connection, $"DROP ROLE {principal}", cancellationToken);
         await principals.CreateAsync(connection, principalName, objectId, cancellationToken);
-        await GrantMembershipIfMissingAsync(connection, principalName, cancellationToken);
-        await ExecuteAsync(connection, $"REASSIGN OWNED BY {holder} TO {principal}", cancellationToken);
-        await ExecuteAsync(connection, $"DROP ROLE {holder}", cancellationToken);
 
         await transaction.CommitAsync(cancellationToken);
     }
 
-    private static async Task GrantMembershipIfMissingAsync(
-        NpgsqlConnection connection, string principalName, CancellationToken cancellationToken)
-    {
-        await using var command = new NpgsqlCommand("SELECT 1 WHERE pg_has_role(current_user, $1, 'USAGE')", connection);
-        command.Parameters.Add(new NpgsqlParameter { Value = principalName });
-        if (await command.ExecuteScalarAsync(cancellationToken) is null)
-        {
-            await ExecuteAsync(connection, $"GRANT {Identifier.Quote(principalName)} TO CURRENT_USER", cancellationToken);
-        }
-    }
-
     private static async Task<bool> ExistsAsync(
-        NpgsqlDataSource dataSource, string sql, string value, CancellationToken cancellationToken)
+        NpgsqlDataSource dataSource, string sql, string[] values, CancellationToken cancellationToken)
     {
         await using var command = dataSource.CreateCommand(sql);
-        command.Parameters.Add(new NpgsqlParameter { Value = value });
+        foreach (var value in values)
+        {
+            command.Parameters.Add(new NpgsqlParameter { Value = value });
+        }
+
         return await command.ExecuteScalarAsync(cancellationToken) is not null;
     }
 
@@ -204,11 +254,12 @@ public sealed partial class DatabaseSetup(
     [LoggerMessage(Level = LogLevel.Information, Message = "Creating principal {Principal}.")]
     private partial void LogCreatingPrincipal(string principal);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Granting membership of {Principal} to the administrator.")]
-    private partial void LogGrantingMembership(string principal);
+    [LoggerMessage(Level = LogLevel.Warning,
+        Message = "Database {Database} is owned by {Principal}; making the administrator its owner.")]
+    private partial void LogTakingOwnership(string database, string principal);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Making {Principal} the owner of database {Database}.")]
-    private partial void LogChangingOwner(string database, string principal);
+    [LoggerMessage(Level = LogLevel.Information, Message = "Granting {Principal} access to the data in database {Database}.")]
+    private partial void LogGrantingDataAccess(string principal, string database);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Creating extension btree_gist in database {Database}.")]
     private partial void LogCreatingExtension(string database);
