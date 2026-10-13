@@ -37,19 +37,38 @@ public sealed class ReservationStore(ReservationsDbContext db)
         return Result.Success();
     }
 
-    private async Task<Result> EnsureAvailableAsync(Reservation reservation, CancellationToken cancellationToken)
+    /// <summary>Returns the dates of the reservation on which its car is already reserved.</summary>
+    public async Task<IReadOnlyList<DateOnly>> FindConflictsAsync(
+        Reservation reservation,
+        CancellationToken cancellationToken = default) =>
+        AvailabilityPolicy.FindConflicts(
+            await LoadCarPeriodsAsync(reservation, cancellationToken),
+            reservation.Periods);
+
+    /// <summary>Whether the car was picked up and not returned before its period ended.</summary>
+    public Task<bool> IsOverdueAsync(string carId, DateTimeOffset now, CancellationToken cancellationToken = default) =>
+        db.ReservationPeriods
+            .Where(p => EF.Property<string>(p, ReservationPeriodConfiguration.CarId) == carId)
+            .AnyAsync(p => p.Status == PeriodStatus.PickedUp && p.End <= now, cancellationToken);
+
+    private async Task<Result> EnsureAvailableAsync(Reservation reservation, CancellationToken cancellationToken) =>
+        AvailabilityPolicy.EnsureAvailable(
+            await LoadCarPeriodsAsync(reservation, cancellationToken),
+            reservation.Periods);
+
+    private async Task<List<ReservationPeriod>> LoadCarPeriodsAsync(
+        Reservation reservation,
+        CancellationToken cancellationToken)
     {
         var from = reservation.Periods.Min(p => p.Start);
         var to = reservation.Periods.Max(p => p.End);
 
-        var carPeriods = await db.ReservationPeriods
+        return await db.ReservationPeriods
             .AsNoTracking()
             .Where(p => EF.Property<string>(p, ReservationPeriodConfiguration.CarId) == reservation.CarId)
             .Where(p => p.Status == PeriodStatus.Scheduled || p.Status == PeriodStatus.PickedUp)
             .Where(p => p.Start < to && from < p.End)
             .ToListAsync(cancellationToken);
-
-        return AvailabilityPolicy.EnsureAvailable(carPeriods, reservation.Periods);
     }
 
     private void Detach(Reservation reservation)

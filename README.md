@@ -19,6 +19,35 @@ The Fleet service loads this file into memory at startup and exposes it read-onl
 
 Unknown offices or categories in a filter return `400` with a problem details body.
 
+## Reservations API
+
+The Reservations service stores employees and their bookings in PostgreSQL. Requests that act on behalf of an employee identify them with two headers:
+
+- `X-PoolCar-Employee`: the employee's id (a GUID). Writes and `GET /reservations/mine` return `401` without a valid id.
+- `X-PoolCar-Operator`: `true` for fleet operators. Employees may only change their own reservations; operators may change any reservation, otherwise the API returns `403`.
+
+| Endpoint | Description |
+| --- | --- |
+| `GET /employees/{id}` | An employee, or `404`. |
+| `PUT /employees/{id}` | Creates or updates an employee's name and home office. |
+| `POST /reservations` | Reserves a car (`carId`, `from`, `to`, `dayPart`, optional `source`) for at most 14 dates. |
+| `POST /reservations/now` | Reserves a car from now until the end of the current day part and picks it up. |
+| `GET /reservations/mine` | The acting employee's reservations of the last 30 days and the future. |
+| `GET /reservations/{id}` | A reservation with its periods, or `404`. |
+| `POST /reservations/{id}/cancel` | Cancels the periods that have not been picked up. |
+
+Errors are problem details with a Dutch `detail` and a machine-readable `code`:
+
+| Status | Code | When |
+| --- | --- | --- |
+| `401` | `unauthorized` | The employee header is missing or invalid. |
+| `403` | `not-allowed` | The reservation belongs to another employee. |
+| `404` | `not-found` | The employee or reservation does not exist. |
+| `409` | `conflict` | The car is already reserved (with `conflictingDates`), or the action does not fit the current state, such as cancelling a cancelled reservation. |
+| `422` | `invalid` | The request breaks a booking rule, such as more than 14 days or booking now outside day-part hours. |
+
+In Development the OpenAPI document is available at `/openapi/v1.json`.
+
 ## Prerequisites
 
 - .NET 10 SDK (the repository pins SDK 10.0.401).
