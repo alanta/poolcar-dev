@@ -20,18 +20,18 @@ public class CarPageTests(WebApplicationFactory<Program> factory) : IClassFixtur
 
     private const string MyReservationsJson = """
         [{"id":"11111111-1111-1111-1111-111111111111","employeeId":"f0671165-c417-421a-9eac-649e8534de6e",
-          "carId":"HPN72V","from":"2026-10-13","to":"2026-10-13","dayPart":"Afternoon","source":"User",
+          "carId":"HPN72V","from":"2026-10-13","to":"2026-10-13","dayPart":"Afternoon",
           "createdAt":"2026-10-12T08:00:00+00:00","cancelledAt":null,"notPickedUp":false,"overdue":false,"periods":[]}]
         """;
 
     private const string ScheduleJson = """
         [{"reservationId":"11111111-1111-1111-1111-111111111111","periodId":"a1111111-1111-1111-1111-111111111111",
           "carId":"HPN72V","date":"2026-10-13","dayPart":"Afternoon","start":"2026-10-13T10:00:00+00:00",
-          "end":"2026-10-13T16:00:00+00:00","status":"Scheduled","source":"User","employeeFirstName":"Bram",
+          "end":"2026-10-13T16:00:00+00:00","status":"Scheduled","employeeFirstName":"Bram",
           "notPickedUp":false,"overdue":false,"atRisk":false},
          {"reservationId":"22222222-2222-2222-2222-222222222222","periodId":"a2222222-2222-2222-2222-222222222222",
           "carId":"HPN72V","date":"2026-10-14","dayPart":"FullDay","start":"2026-10-14T06:00:00+00:00",
-          "end":"2026-10-14T16:00:00+00:00","status":"Scheduled","source":"User","employeeFirstName":"Anna",
+          "end":"2026-10-14T16:00:00+00:00","status":"Scheduled","employeeFirstName":"Anna",
           "notPickedUp":false,"overdue":false,"atRisk":false}]
         """;
 

@@ -18,7 +18,7 @@ public class NoOverlappingPeriodsTests(ReservationsDatabase database) : IClassFi
             _employeeId = (await database.AddEmployeeAsync()).Id;
         }
 
-        return Reservation.Create(_employeeId, carId, from, to, part, ReservationSource.User, s_now).Value!;
+        return Reservation.Create(_employeeId, carId, from, to, part, s_now).Value!;
     }
 
     private async Task SaveAsync(params Reservation[] reservations)

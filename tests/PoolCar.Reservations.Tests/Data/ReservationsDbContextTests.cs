@@ -26,7 +26,7 @@ public class ReservationsDbContextTests(ReservationsDatabase database) : IClassF
         var employee = await database.AddEmployeeAsync();
         var carId = ReservationsDatabase.NewCarId();
         var reservation = Reservation.Create(
-            employee.Id, carId, s_date, s_date.AddDays(1), DayPart.Afternoon, ReservationSource.Simulator, s_now).Value!;
+            employee.Id, carId, s_date, s_date.AddDays(1), DayPart.Afternoon, s_now).Value!;
 
         await using (var db = database.CreateContext())
         {
@@ -42,7 +42,6 @@ public class ReservationsDbContextTests(ReservationsDatabase database) : IClassF
         loaded.FromDate.ShouldBe(s_date);
         loaded.ToDate.ShouldBe(s_date.AddDays(1));
         loaded.DayPart.ShouldBe(DayPart.Afternoon);
-        loaded.Source.ShouldBe(ReservationSource.Simulator);
         loaded.CreatedAt.ShouldBe(s_now);
         loaded.CancelledAt.ShouldBeNull();
         loaded.Periods.Count.ShouldBe(2);
@@ -65,7 +64,7 @@ public class ReservationsDbContextTests(ReservationsDatabase database) : IClassF
         var employee = await database.AddEmployeeAsync();
         var carId = ReservationsDatabase.NewCarId();
         var reservation = Reservation.Create(
-            employee.Id, carId, s_date, s_date, DayPart.Morning, ReservationSource.User, s_now).Value!;
+            employee.Id, carId, s_date, s_date, DayPart.Morning, s_now).Value!;
 
         await using (var db = database.CreateContext())
         {

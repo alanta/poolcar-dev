@@ -30,7 +30,7 @@ The Reservations service stores employees and their bookings in PostgreSQL. Requ
 | --- | --- |
 | `GET /employees/{id}` | An employee, or `404`. |
 | `PUT /employees/{id}` | Creates or updates an employee's name and home office. |
-| `POST /reservations` | Reserves a car (`carId`, `from`, `to`, `dayPart`, optional `source`) for at most 14 dates. |
+| `POST /reservations` | Reserves a car (`carId`, `from`, `to`, `dayPart`) for at most 14 dates. |
 | `POST /reservations/now` | Reserves a car from now until the end of the current day part and picks it up. |
 | `GET /reservations/mine` | The acting employee's reservations of the last 30 days and the future. |
 | `GET /reservations/{id}` | A reservation with its periods, or `404`. |

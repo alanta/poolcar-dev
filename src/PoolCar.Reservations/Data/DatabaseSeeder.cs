@@ -49,7 +49,7 @@ public static class DatabaseSeeder
 
         void Add(Guid employeeId, string carId, DateOnly from, DateOnly to, DayPart part, DateTimeOffset? pickUpAt = null)
         {
-            var reservation = Reservation.Create(employeeId, carId, from, to, part, ReservationSource.User, now).Value!;
+            var reservation = Reservation.Create(employeeId, carId, from, to, part, now).Value!;
             if (!booked.TryGetValue(carId, out var periods))
             {
                 booked[carId] = periods = [];

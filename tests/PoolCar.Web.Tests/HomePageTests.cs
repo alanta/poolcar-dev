@@ -20,7 +20,7 @@ public class HomePageTests(WebApplicationFactory<Program> factory) : IClassFixtu
 
     private const string ReservationsJson = """
         [{"id":"11111111-1111-1111-1111-111111111111","employeeId":"f0671165-c417-421a-9eac-649e8534de6e",
-          "carId":"HPN72V","from":"2026-10-14","to":"2026-10-14","dayPart":"Afternoon","source":"User",
+          "carId":"HPN72V","from":"2026-10-14","to":"2026-10-14","dayPart":"Afternoon",
           "createdAt":"2026-10-12T08:00:00+00:00","cancelledAt":null,"notPickedUp":false,"overdue":false,
           "periods":[{"id":"22222222-2222-2222-2222-222222222222","date":"2026-10-14",
             "start":"2026-10-14T11:00:00+00:00","end":"2026-10-14T16:00:00+00:00","status":"Scheduled",

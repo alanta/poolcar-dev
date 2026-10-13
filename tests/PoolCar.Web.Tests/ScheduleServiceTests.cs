@@ -99,7 +99,7 @@ public class ScheduleServiceTests
 
     private static string Entry(string carId, string date, string dayPart, string status, string start, bool overdue = false) => $$"""
         {"reservationId":"{{Guid.NewGuid()}}","periodId":"{{Guid.NewGuid()}}","carId":"{{carId}}","date":"{{date}}",
-         "dayPart":"{{dayPart}}","start":"{{start}}","end":"{{start}}","status":"{{status}}","source":"User",
+         "dayPart":"{{dayPart}}","start":"{{start}}","end":"{{start}}","status":"{{status}}",
          "employeeFirstName":"Bram","notPickedUp":false,"overdue":{{(overdue ? "true" : "false")}},"atRisk":false}
         """;
 

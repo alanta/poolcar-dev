@@ -15,12 +15,6 @@ public enum PeriodStatus
     Cancelled,
 }
 
-public enum ReservationSource
-{
-    User,
-    Simulator,
-}
-
 public enum EmployeeKind
 {
     Seeded,
@@ -36,10 +30,9 @@ public sealed record CreateReservationRequest(
     string CarId,
     DateOnly From,
     DateOnly To,
-    DayPart DayPart,
-    ReservationSource? Source = null);
+    DayPart DayPart);
 
-public sealed record BookNowRequest(string CarId, ReservationSource? Source = null);
+public sealed record BookNowRequest(string CarId);
 
 public sealed record ReservationPeriod(
     Guid Id,
@@ -59,7 +52,6 @@ public sealed record Reservation(
     DateOnly From,
     DateOnly To,
     DayPart DayPart,
-    ReservationSource Source,
     DateTimeOffset CreatedAt,
     DateTimeOffset? CancelledAt,
     bool NotPickedUp,
@@ -84,7 +76,6 @@ public sealed record ScheduleEntry(
     DateTimeOffset Start,
     DateTimeOffset End,
     PeriodStatus Status,
-    ReservationSource Source,
     string EmployeeFirstName,
     bool NotPickedUp,
     bool Overdue,

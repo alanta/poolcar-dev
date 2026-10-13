@@ -79,7 +79,6 @@ public static class ReservationEndpoints
             request.From,
             request.To,
             request.DayPart,
-            request.Source ?? ReservationSource.User,
             now);
 
         return created.IsSuccess
@@ -104,7 +103,6 @@ public static class ReservationEndpoints
         var created = Reservation.BookNow(
             user.EmployeeId,
             request.CarId?.Trim() ?? string.Empty,
-            request.Source ?? ReservationSource.User,
             now);
 
         return created.IsSuccess

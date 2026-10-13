@@ -54,7 +54,6 @@ public class ReservationApiTests(ReservationsApiFactory api) : IClassFixture<Res
         var reservation = await response.ReadAsync<ReservationResponse>();
         response.Headers.Location!.ToString().ShouldBe($"/reservations/{reservation.Id}");
         reservation.CarId.ShouldBe(carId);
-        reservation.Source.ShouldBe(ReservationSource.User);
         reservation.Periods.Select(p => p.Date).ShouldBe([Today.AddDays(1), Today.AddDays(2), Today.AddDays(3)]);
         reservation.Periods.ShouldAllBe(p => p.Status == PeriodStatus.Scheduled && !p.NotPickedUp && !p.Overdue);
         var (start, end) = DayParts.ToPeriod(Today.AddDays(1), DayPart.Afternoon);

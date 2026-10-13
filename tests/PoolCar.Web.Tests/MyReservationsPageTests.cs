@@ -245,7 +245,7 @@ public partial class MyReservationsPageTests(WebApplicationFactory<Program> fact
         DateTimeOffset end,
         bool overdue = false) => $$"""
         {"id":"{{id}}","employeeId":"{{TestPrincipals.KnownId}}","carId":"KSP73B","from":"2026-10-13",
-         "to":"2026-10-13","dayPart":"Morning","source":"User","createdAt":"2026-10-10T08:00:00+00:00",
+         "to":"2026-10-13","dayPart":"Morning","createdAt":"2026-10-10T08:00:00+00:00",
          "cancelledAt":null,"notPickedUp":false,"overdue":{{(overdue ? "true" : "false")}},
          "periods":[{"id":"{{periodId}}","date":"2026-10-13","start":"{{start:O}}","end":"{{end:O}}",
            "status":"{{status}}","pickedUpAt":null,"returnedAt":null,"notPickedUp":false,

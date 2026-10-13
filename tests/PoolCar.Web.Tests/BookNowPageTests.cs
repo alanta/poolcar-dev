@@ -187,7 +187,7 @@ public partial class BookNowPageTests(WebApplicationFactory<Program> factory)
 
     private const string BookedJson = """
         {"id":"11111111-1111-1111-1111-111111111111","employeeId":"f0671165-c417-421a-9eac-649e8534de6e",
-         "carId":"HPN72V","from":"2026-10-13","to":"2026-10-13","dayPart":"Morning","source":"User",
+         "carId":"HPN72V","from":"2026-10-13","to":"2026-10-13","dayPart":"Morning",
          "createdAt":"2026-10-13T09:00:00+00:00","cancelledAt":null,"notPickedUp":false,"overdue":false,
          "periods":[{"id":"22222222-2222-2222-2222-222222222222","date":"2026-10-13",
            "start":"2026-10-13T09:00:00+00:00","end":"2026-10-13T10:00:00+00:00","status":"PickedUp",

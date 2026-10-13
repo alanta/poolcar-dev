@@ -67,7 +67,6 @@ public class ScheduleApiTests(ReservationsApiFactory api) : IClassFixture<Reserv
             start,
             end,
             PeriodStatus.Scheduled,
-            ReservationSource.User,
             "Sanne",
             NotPickedUp: false,
             Overdue: false,

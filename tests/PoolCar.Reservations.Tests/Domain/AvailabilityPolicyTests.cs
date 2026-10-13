@@ -48,8 +48,7 @@ public class AvailabilityPolicyTests
     public void Cancelled_period_does_not_block()
     {
         var reservation = Reservation.Create(
-            Guid.NewGuid(), "HPN72V", s_date, s_date, DayPart.Morning, ReservationSource.User,
-            s_morning.AddDays(-1)).Value!;
+            Guid.NewGuid(), "HPN72V", s_date, s_date, DayPart.Morning, s_morning.AddDays(-1)).Value!;
         reservation.Cancel(s_morning.AddDays(-1)).IsSuccess.ShouldBeTrue();
         var (start, end) = DayParts.ToPeriod(s_date, DayPart.Morning);
         var requested = ReservationPeriod.Schedule(s_date, start, end);

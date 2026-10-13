@@ -65,7 +65,6 @@ public static class ScheduleEndpoints
                     ReservationId = reservation.Id,
                     reservation.CarId,
                     reservation.DayPart,
-                    reservation.Source,
                     EmployeeName = employee.Name,
                     Period = period,
                 })
@@ -90,7 +89,6 @@ public static class ScheduleEndpoints
                 e.Period.Start,
                 e.Period.End,
                 e.Period.Status,
-                e.Source,
                 FirstName(e.EmployeeName),
                 e.Period.IsNotPickedUp(now),
                 e.Period.IsOverdue(now),
