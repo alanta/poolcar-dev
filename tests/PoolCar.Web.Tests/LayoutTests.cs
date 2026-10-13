@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using PoolCar.Web.Auth;
 using PoolCar.Web.Clients;
 using PoolCar.Web.Tests.Support;
+using Polly.CircuitBreaker;
 using Shouldly;
 
 namespace PoolCar.Web.Tests;
@@ -102,6 +103,40 @@ public partial class LayoutTests(WebApplicationFactory<Program> factory) : IClas
         var html = await response.Content.ReadAsStringAsync(Token);
         html.ShouldContain("Er ging iets mis");
         html.ShouldContain("class=\"trace-id\"");
+    }
+
+    [Fact]
+    public async Task ErrorPage_RendersWithoutCallingTheApis()
+    {
+        var reservationCalls = 0;
+        var failingReservations = new StubHttpHandler().On(HttpMethod.Get, $"/employees/{TestPrincipals.KnownId}", _ =>
+        {
+            Interlocked.Increment(ref reservationCalls);
+            throw new BrokenCircuitException();
+        });
+        using var production = factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Production");
+            builder.ConfigureServices(services =>
+            {
+                services.AddHttpClient<FleetApiClient>().ConfigurePrimaryHttpMessageHandler(() => _fleet);
+                services.AddHttpClient<ReservationsApiClient>().ConfigurePrimaryHttpMessageHandler(() => failingReservations);
+            });
+        });
+        using var client = production.CreateClient();
+        client.DefaultRequestHeaders.Add(
+            EasyAuthAuthenticationDefaults.HeaderName,
+            TestPrincipals.Header(TestPrincipals.KnownId, "Bram Testbeek"));
+
+        using var response = await client.GetAsync("/wagenpark", Token);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
+        var html = await response.Content.ReadAsStringAsync(Token);
+        html.ShouldContain("Er ging iets mis");
+        html.ShouldContain("Bram Testbeek");
+        html.ShouldNotContain("Thuislocatie:");
+        reservationCalls.ShouldBe(1);
+        _fleet.Requests.ShouldNotContain(r => r.Uri.AbsolutePath == "/offices");
     }
 
     [Fact]
