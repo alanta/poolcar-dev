@@ -26,7 +26,6 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.12" />
 
     <!-- Worker/Hosting -->
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.12" />
 
     <!-- Testing -->

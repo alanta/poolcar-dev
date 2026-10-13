@@ -4,7 +4,6 @@
     <Project Path="src/PoolCar.Fleet/PoolCar.Fleet.csproj" />
     <Project Path="src/PoolCar.Reservations/PoolCar.Reservations.csproj" />
     <Project Path="src/PoolCar.ServiceDefaults/PoolCar.ServiceDefaults.csproj" />
-    <Project Path="src/PoolCar.Simulator/PoolCar.Simulator.csproj" />
     <Project Path="src/PoolCar.Web/PoolCar.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">

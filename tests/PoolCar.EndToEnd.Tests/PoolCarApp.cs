@@ -24,9 +24,7 @@ public sealed class PoolCarApp : IAsyncLifetime
     {
         using var timeout = new CancellationTokenSource(StartupTimeout);
 
-        var builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.PoolCar_AppHost>(
-            ["--Simulator:Enabled=false"],
-            timeout.Token);
+        var builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.PoolCar_AppHost>(timeout.Token);
         UseRandomProxyPort(builder);
         UseFreshDatabase(builder);
 

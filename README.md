@@ -76,12 +76,6 @@ aspire run
 
 Open the EasyAuth development proxy at <http://localhost:5000>. On the sign-in form, enter a demo username such as `demo@example.test`; the user ID can be left at its generated value. Enter `FleetOperator` in Roles to try the operator view.
 
-The Simulator is visible in the Aspire dashboard but does not start by default. To start it, pass `Simulator:Enabled=true` to the AppHost:
-
-```sh
-aspire run -- --Simulator:Enabled=true
-```
-
 ## Seeded employees
 
 On startup the Reservations service creates 30 fictional employees when its database has none, and AppHost also adds fixed sample bookings relative to today. To sign in as one of them, enter its ID in the User ID field of the sign-in form:
