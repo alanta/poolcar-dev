@@ -6,6 +6,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <ContainerRepository>poolcar-web</ContainerRepository>
+    <!-- Full base image with ICU and time zone data. -->
+    <ContainerBaseImage>mcr.microsoft.com/dotnet/aspnet:10.0</ContainerBaseImage>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\PoolCar.ServiceDefaults\PoolCar.ServiceDefaults.csproj" />
   </ItemGroup>
