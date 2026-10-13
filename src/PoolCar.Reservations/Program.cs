@@ -8,6 +8,7 @@ builder.AddServiceDefaults();
 builder.AddNpgsqlDbContext<ReservationsDbContext>(
     "reservations",
     configureDbContextOptions: options => options.UseSnakeCaseNamingConvention());
+builder.Services.AddScoped<ReservationStore>();
 
 var app = builder.Build();
 
