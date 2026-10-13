@@ -35,6 +35,8 @@ The Reservations service stores employees and their bookings in PostgreSQL. Requ
 | `GET /reservations/mine` | The acting employee's reservations of the last 30 days and the future. |
 | `GET /reservations/{id}` | A reservation with its periods, or `404`. |
 | `POST /reservations/{id}/cancel` | Cancels the periods that have not been picked up. |
+| `POST /periods/{id}/pickup` | Picks up the car of a running period. |
+| `POST /periods/{id}/return` | Returns the car; an early return frees the rest of the period. |
 
 Errors are problem details with a Dutch `detail` and a machine-readable `code`:
 
@@ -43,7 +45,7 @@ Errors are problem details with a Dutch `detail` and a machine-readable `code`:
 | `401` | `unauthorized` | The employee header is missing or invalid. |
 | `403` | `not-allowed` | The reservation belongs to another employee. |
 | `404` | `not-found` | The employee or reservation does not exist. |
-| `409` | `conflict` | The car is already reserved (with `conflictingDates`), or the action does not fit the current state, such as cancelling a cancelled reservation. |
+| `409` | `conflict` | The car is already reserved (with `conflictingDates`), or the action does not fit the current state, such as cancelling a cancelled reservation or returning a car that was not picked up. |
 | `422` | `invalid` | The request breaks a booking rule, such as more than 14 days or booking now outside day-part hours. |
 
 In Development the OpenAPI document is available at `/openapi/v1.json`.

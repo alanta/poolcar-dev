@@ -224,6 +224,6 @@ public static class ReservationEndpoints
         return TypedResults.Ok(ReservationResponse.Create(reservation, now));
     }
 
-    internal static ProblemHttpResult ReservationNotFound() =>
+    private static ProblemHttpResult ReservationNotFound() =>
         ApiProblems.NotFound("Deze reservering bestaat niet.");
 }
