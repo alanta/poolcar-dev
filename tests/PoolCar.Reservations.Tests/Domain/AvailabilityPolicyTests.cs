@@ -8,7 +8,7 @@ public class AvailabilityPolicyTests
     private static readonly DateTimeOffset s_morning = new(2026, 10, 14, 8, 0, 0, TimeSpan.Zero);
 
     private static ReservationPeriod Period(DateTimeOffset start, double hours) =>
-        ReservationPeriod.Schedule(DateOnly.FromDateTime(start.UtcDateTime), start, start.AddHours(hours));
+        ReservationPeriod.Schedule(DateOnly.FromDateTime(start.DateTime), start, start.AddHours(hours));
 
     private static ReservationPeriod PickedUp(DateTimeOffset start, double hours)
     {
@@ -42,6 +42,19 @@ public class AvailabilityPolicyTests
         var requested = Period(s_morning, 10);
 
         AvailabilityPolicy.FindConflicts([existing], [requested]).ShouldBe([s_date]);
+    }
+
+    [Fact]
+    public void Cancelled_period_does_not_block()
+    {
+        var reservation = Reservation.Create(
+            Guid.NewGuid(), "HPN72V", s_date, s_date, DayPart.Morning, ReservationSource.User,
+            s_morning.AddDays(-1)).Value!;
+        reservation.Cancel(s_morning.AddDays(-1)).IsSuccess.ShouldBeTrue();
+        var (start, end) = DayParts.ToPeriod(s_date, DayPart.Morning);
+        var requested = ReservationPeriod.Schedule(s_date, start, end);
+
+        AvailabilityPolicy.FindConflicts(reservation.Periods, [requested]).ShouldBeEmpty();
     }
 
     [Fact]
