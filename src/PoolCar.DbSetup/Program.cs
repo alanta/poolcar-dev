@@ -29,6 +29,7 @@ try
     var setup = new DatabaseSetup(
         EntraDataSources.Create(options, new DefaultAzureCredential()),
         new EntraPrincipals(),
+        TimeProvider.System,
         logger);
     await setup.RunAsync(options, CancellationToken.None);
 }

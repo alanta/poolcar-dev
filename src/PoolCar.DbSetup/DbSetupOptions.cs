@@ -14,7 +14,7 @@ public sealed class DbSetupOptions
     /// <summary>The database to create.</summary>
     public string Database { get; set; } = string.Empty;
 
-    /// <summary>The Entra principal that owns the database.</summary>
+    /// <summary>The Entra principal that Reservations connects as, which may read and write the data.</summary>
     public string Principal { get; set; } = string.Empty;
 
     /// <summary>The object ID of <see cref="Principal"/>.</summary>
