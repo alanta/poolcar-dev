@@ -1,0 +1,184 @@
+@model ReserverenModel
+@using PoolCar.Web.Formatting
+@{
+    // After an htmx swap, focus the heading of the deepest step, except while the dates are being changed
+    var focus = !Model.MoveFocus ? null
+        : Model.Confirmation is not null ? "done"
+        : Model.Conflict is not null ? "conflict"
+        : Model.SelectedCar is not null ? "confirm"
+        : Model.SelectedCategoryName is not null ? "cars"
+        : "categories";
+}
+@if (!Model.IsPreselected && !string.IsNullOrEmpty(Model.Category))
+{
+    <input type="hidden" name="categorie" value="@Model.Category" form="@ReserverenModel.FormId" />
+}
+@if (!string.IsNullOrEmpty(Model.Plate))
+{
+    <input type="hidden" name="auto" value="@Model.Plate" form="@ReserverenModel.FormId" />
+}
+@if (Model.Toast is not null)
+{
+    <partial name="@Toast.OutOfBandPartial" model="Model.Toast" />
+}
+
+@if (Model.Summary is not null && Model.Confirmation is null)
+{
+    <p class="reserve-summary">@Model.Summary</p>
+}
+@if (Model.ValidationMessage is not null)
+{
+    <p class="form-error" role="alert">@Model.ValidationMessage</p>
+}
+@if (Model.ErrorMessage is not null)
+{
+    <p class="form-error" role="alert">@Model.ErrorMessage</p>
+}
+
+@if (Model.Confirmation is { } done)
+{
+    <section class="section card reserve-done" aria-labelledby="stap-gereserveerd">
+        <h2 id="stap-gereserveerd" tabindex="-1" autofocus="@(focus == "done")">Gereserveerd!</h2>
+        <p class="card-title">@done.CarName <span class="plate">@done.Plate</span></p>
+        <p>@done.Summary</p>
+        <p>@done.NextStep</p>
+        <div class="button-row">
+            <a class="button button-dark" href="/mijn-reserveringen">Mijn reserveringen</a>
+            <a href="/reserveren">Nog een auto reserveren</a>
+        </div>
+    </section>
+}
+else if (Model.ValidationMessage is null)
+{
+    @if (!Model.IsPreselected && Model.Categories.Count > 0)
+    {
+        <section class="section" aria-labelledby="stap-categorie">
+            <h2 id="stap-categorie" tabindex="-1" autofocus="@(focus == "categories")">Kies een categorie</h2>
+            <ul class="tiles reserve-categories">
+                @foreach (var tile in Model.Categories)
+                {
+                    <li>
+                        @if (tile.HasAvailable)
+                        {
+                            <a class="tile @(tile.IsSelected ? "is-selected" : null)" href="@tile.Url"
+                               hx-get="@tile.Url" hx-target="#reserve-steps" hx-push-url="true"
+                               aria-current="@(tile.IsSelected ? "true" : null)">
+                                <partial name="_CategoryIcon" model="tile.Category.Id" />
+                                <span class="tile-title">@tile.Category.Name</span>
+                                <span class="tile-text">@tile.Example</span>
+                                <span class="reserve-count badge badge-info">@tile.Available van @tile.Total vrij</span>
+                            </a>
+                        }
+                        else
+                        {
+                            <div class="tile is-disabled">
+                                <partial name="_CategoryIcon" model="tile.Category.Id" />
+                                <span class="tile-title">@tile.Category.Name</span>
+                                <span class="reserve-count badge">0 vrij</span>
+                                <span class="tile-text">Geen auto vrij. Probeer een andere vestiging of dag.</span>
+                                @foreach (var office in tile.OtherOffices)
+                                {
+                                    <a href="@office.Url">Kijk in @office.Name</a>
+                                }
+                            </div>
+                        }
+                    </li>
+                }
+            </ul>
+        </section>
+    }
+
+    @if (!Model.IsPreselected && Model.SelectedCategoryName is not null)
+    {
+        <section class="section" aria-labelledby="stap-auto">
+            <h2 id="stap-auto" tabindex="-1" autofocus="@(focus == "cars")">Kies een auto</h2>
+            @if (Model.Cars.Count == 0)
+            {
+                <div class="empty-state">
+                    <p class="empty-state-title">Geen auto vrij in de categorie @Model.SelectedCategoryName.</p>
+                    <p>Kies een andere categorie, vestiging of dag.</p>
+                </div>
+            }
+            else
+            {
+                <p class="muted">@Model.SelectedCategoryName, langste bereik eerst.</p>
+                <ul class="cards reserve-cars">
+                    @foreach (var card in Model.Cars)
+                    {
+                        var car = card.Car;
+                        <li class="card @(card.IsSelected ? "is-selected" : null)">
+                            <p class="card-title">@car.Make @car.Model</p>
+                            <p><span class="plate">@LicensePlate.Format(car.Plate)</span></p>
+                            <p class="card-meta">@car.Colour · @car.RangeKm km bereik · @car.Seats zitplaatsen</p>
+                            @if (card.IsSelected)
+                            {
+                                <span class="badge badge-dark">Gekozen</span>
+                            }
+                            else
+                            {
+                                <a class="button button-small" href="@card.ChooseUrl"
+                                   hx-get="@card.ChooseUrl" hx-target="#reserve-steps" hx-push-url="true">Kies<span class="visually-hidden"> @car.Make @car.Model @LicensePlate.Format(car.Plate)</span></a>
+                            }
+                        </li>
+                    }
+                </ul>
+                @if (Model.HiddenCarCount > 0)
+                {
+                    var showAllUrl = Model.StepUrl(showAll: true);
+                    <p class="reserve-show-all">
+                        <a href="@showAllUrl" hx-get="@showAllUrl" hx-target="#reserve-steps" hx-push-url="true">Toon alle @(Model.Cars.Count + Model.HiddenCarCount) auto's</a>
+                    </p>
+                }
+            }
+        </section>
+    }
+
+    @if (Model.Conflict is not null)
+    {
+        <partial name="@ReserverenModel.ConflictPartial" model="Model.Conflict" view-data="@(new ViewDataDictionary(ViewData) { ["Autofocus"] = focus == "conflict" })" />
+    }
+    else if (Model.SelectedCar is { } selected)
+    {
+        <section class="section" aria-labelledby="stap-bevestigen">
+            <h2 id="stap-bevestigen" tabindex="-1" autofocus="@(focus == "confirm")">Bevestig je reservering</h2>
+            <div class="card reserve-confirm">
+                <p class="card-title">@selected.Make @selected.Model <span class="plate">@LicensePlate.Format(selected.Plate)</span></p>
+                <p class="card-meta">@selected.Colour · @selected.RangeKm km bereik · @selected.Seats zitplaatsen</p>
+                <dl class="reserve-details">
+                    <div>
+                        <dt>Wanneer</dt>
+                        <dd>@DutchDate.Capitalize(DutchDate.Range(Model.From, Model.To))</dd>
+                    </div>
+                    <div>
+                        <dt>Dagdeel</dt>
+                        <dd>@DayPartText.Label(Model.DayPart), @DayPartText.Hours(Model.DayPart)@(Model.From == Model.To ? null : ", elke dag")</dd>
+                    </div>
+                    <div>
+                        <dt>Vestiging</dt>
+                        <dd>@Model.SelectedOffice?.Name</dd>
+                    </div>
+                </dl>
+                <form method="post" asp-page-handler="Reserve"
+                      hx-post="@Url.Page("/Reserveren", "Reserve")" hx-target="#reserve-steps"
+                      hx-disabled-elt="find button" hx-indicator="find .spinner">
+                    <input type="hidden" name="vestiging" value="@Model.SelectedOffice?.Id" />
+                    <input type="hidden" name="van" value="@ReserverenModel.Format(Model.From)" />
+                    <input type="hidden" name="tot" value="@ReserverenModel.Format(Model.To)" />
+                    <input type="hidden" name="dagdeel" value="@DayPartText.Slug(Model.DayPart)" />
+                    @if (!Model.IsPreselected)
+                    {
+                        <input type="hidden" name="categorie" value="@Model.Category" />
+                    }
+                    <input type="hidden" name="auto" value="@selected.Plate" />
+                    <div class="button-row">
+                        <button type="submit" class="button button-large">Reserveer <span class="spinner" aria-hidden="true"></span></button>
+                        @if (Model.IsPreselected)
+                        {
+                            <a href="@Model.CategoryStepUrl">Kies een andere auto</a>
+                        }
+                    </div>
+                </form>
+            </div>
+        </section>
+    }
+}
