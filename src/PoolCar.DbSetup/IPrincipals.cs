@@ -18,12 +18,12 @@ public sealed class EntraPrincipals : IPrincipals
     public async Task<Guid?> GetObjectIdAsync(
         NpgsqlConnection connection, string principal, CancellationToken cancellationToken)
     {
-        // Documented to return TABLE(rolename name, principalType text, objectId text, ...); read the columns by
+        // Documented to return TABLE(rolname name, principalType text, objectId text, ...); read the columns by
         // name, which Npgsql matches case-insensitively, rather than depending on how their case is stored.
         await using var command = new NpgsqlCommand(
             "SELECT * FROM pg_catalog.pgaadauth_list_principals(false)", connection);
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        var roleName = reader.GetOrdinal("rolename");
+        var roleName = reader.GetOrdinal("rolname");
         var objectId = reader.GetOrdinal("objectId");
         while (await reader.ReadAsync(cancellationToken))
         {
