@@ -42,6 +42,23 @@ jobs:
       - name: Verify code formatting
         run: dotnet format --verify-no-changes
 
+      - name: Lint Bicep
+        run: |
+          bicep="$RUNNER_TEMP/bicep"
+          curl -fsSLo "$bicep" https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
+          chmod +x "$bicep"
+          "$bicep" --version
+          shopt -s globstar
+          failed=0
+          for file in infra/**/*.bicep; do
+            output=$("$bicep" lint "$file" 2>&1) || failed=1
+            if [[ -n "$output" ]]; then
+              echo "$output"
+              failed=1
+            fi
+          done
+          exit $failed
+
   test:
     name: Test
     runs-on: ubuntu-latest
