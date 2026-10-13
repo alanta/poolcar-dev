@@ -31,6 +31,7 @@ PoolCar is an internal shared-car application. Web is the authenticated user ent
 - Use `TimeProvider` for time.
 - Bind service addresses to typed options, validate them at startup, and configure them in AppHost.
 - Keep HTMX progressively enhanced: forms work without JavaScript, use the vendored script, and include the antiforgery request header for requests.
+- Use the helpers in `src/PoolCar.Web/Htmx/` (`IsHtmx`, `PartialOrPage`, `HtmxRedirect`, `Toast`) and `src/PoolCar.Web/Formatting/` for dates, day parts, times and license plates.
 - Run `dotnet format PoolCar.slnx --verify-no-changes` before completing a change.
 
 ## Definition of done

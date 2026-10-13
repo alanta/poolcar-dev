@@ -143,6 +143,39 @@ public partial class OnboardingTests(WebApplicationFactory<Program> factory) : I
         (await response.Content.ReadAsStringAsync(Token)).ShouldContain("Kies je kantoor.");
     }
 
+    [Fact]
+    public async Task UnknownEmployee_OnHtmxRequest_GetsFullPageRedirect()
+    {
+        using var client = CreateClient(TestPrincipals.UnknownId);
+        client.DefaultRequestHeaders.Add("HX-Request", "true");
+
+        using var response = await client.GetAsync("/wagenpark", Token);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        response.Headers.GetValues("HX-Redirect").ShouldHaveSingleItem().ShouldBe("/welkom?returnUrl=%2Fwagenpark");
+    }
+
+    [Fact]
+    public async Task PostingOffice_ShowsToastOnNextPage()
+    {
+        using var client = CreateClient(TestPrincipals.UnknownId);
+        var token = await GetAntiforgeryTokenAsync(client);
+        using var post = await client.PostAsync("/welkom", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = token,
+            ["Name"] = "Jan de Boer",
+            ["Office"] = "amsterdam",
+        }), Token);
+        _reservations.OnJson(HttpMethod.Get, $"/employees/{TestPrincipals.UnknownId}", EmployeeJson(TestPrincipals.UnknownId, "Jan de Boer"));
+
+        var home = await client.GetStringAsync("/", Token);
+        var next = await client.GetStringAsync("/", Token);
+
+        home.ShouldContain("Je thuislocatie is Amsterdam.");
+        home.ShouldContain("data-toast-close");
+        next.ShouldNotContain("Je thuislocatie is Amsterdam.");
+    }
+
     [Theory]
     [InlineData("/welkom", true)]
     [InlineData("/Welkom", true)]

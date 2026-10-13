@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using PoolCar.Web.Clients;
 using PoolCar.Web.Employees;
+using PoolCar.Web.Htmx;
 
 namespace PoolCar.Web.Pages;
 
@@ -76,6 +77,7 @@ public class WelkomModel(
         }
 
         currentEmployee.Set(result.Value);
+        Toast.Success($"Je thuislocatie is {Offices.First(o => o.Id == Office).Name}.").Store(TempData);
         return LocalRedirect(GetReturnUrl());
     }
 

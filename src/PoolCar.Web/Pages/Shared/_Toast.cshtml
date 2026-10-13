@@ -1,0 +1,8 @@
+@model PoolCar.Web.Htmx.Toast
+@{
+    var isError = Model.Kind == PoolCar.Web.Htmx.ToastKind.Error;
+}
+<div class="toast @(isError ? "toast-error" : "toast-success")" role="@(isError ? "alert" : "status")">
+    <p class="toast-message">@Model.Message</p>
+    <button type="button" class="toast-close" data-toast-close aria-label="Sluiten">&times;</button>
+</div>

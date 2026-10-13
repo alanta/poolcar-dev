@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.WebUtilities;
 using PoolCar.Web.Employees;
+using PoolCar.Web.Htmx;
 
 namespace PoolCar.Web.Onboarding;
 
@@ -23,7 +24,7 @@ public sealed class OnboardingPageFilter(CurrentEmployee currentEmployee) : IAsy
             await currentEmployee.LoadAsync(context.HttpContext.RequestAborted);
             if (!currentEmployee.IsKnown)
             {
-                context.Result = new RedirectResult(GetWelcomeUrl(request));
+                context.Result = PageModelHtmxExtensions.HtmxRedirect(context.HttpContext, GetWelcomeUrl(request));
                 return;
             }
         }

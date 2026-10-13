@@ -366,3 +366,55 @@ a:hover {
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
+
+.toasts {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 10;
+    display: grid;
+    gap: 0.5rem;
+    max-width: min(24rem, calc(100vw - 2rem));
+}
+
+.toast {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    color: var(--color-white);
+    background: var(--color-success);
+    animation: toast-hide 0.3s ease-in 5s forwards;
+}
+
+.toast:hover,
+.toast:focus-within {
+    animation-play-state: paused;
+}
+
+.toast-error {
+    background: var(--color-red-500);
+}
+
+.toast-message {
+    margin: 0;
+    flex: 1;
+}
+
+.toast-close {
+    border: 0;
+    padding: 0 0.25rem;
+    color: inherit;
+    background: none;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+@keyframes toast-hide {
+    to {
+        opacity: 0;
+        visibility: hidden;
+    }
+}
