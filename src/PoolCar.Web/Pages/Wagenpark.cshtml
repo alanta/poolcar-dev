@@ -8,53 +8,59 @@
 <div class="container fleet-page">
     <h1>Wagenpark</h1>
 
-    <form method="get" class="office-switch">
-        <label for="vestiging">Vestiging</label>
-        <select id="vestiging" name="vestiging">
-            @foreach (var office in Model.Offices)
-            {
-                <option value="@office.Id" selected="@(office.Id == Model.SelectedOffice?.Id)">@office.Name</option>
-            }
-        </select>
-        <button type="submit">Bekijk</button>
+    <form method="get" class="form-row">
+        <div class="form-field">
+            <label for="vestiging">Vestiging</label>
+            <select id="vestiging" name="vestiging">
+                @foreach (var office in Model.Offices)
+                {
+                    <option value="@office.Id" selected="@(office.Id == Model.SelectedOffice?.Id)">@office.Name</option>
+                }
+            </select>
+        </div>
+        <button type="submit" class="button button-dark">Bekijk</button>
     </form>
 
     @if (Model.SelectedOffice is null)
     {
-        <p>Er zijn nog geen vestigingen.</p>
+        <div class="empty-state section">
+            <p class="empty-state-title">Er zijn nog geen vestigingen.</p>
+        </div>
     }
     else
     {
-        <p class="fleet-summary">@Model.CarCount auto's in @Model.SelectedOffice.Name</p>
+        <p class="lead section">@Model.CarCount auto's in @Model.SelectedOffice.Name</p>
 
         @foreach (var group in Model.Groups)
         {
-            <section class="fleet-category" aria-labelledby="categorie-@group.Category.Id">
+            <section class="section" aria-labelledby="categorie-@group.Category.Id">
                 <h2 id="categorie-@group.Category.Id">@group.Category.Name</h2>
-                <p>@group.Category.Description</p>
-                <table>
-                    <thead>
-                        <tr>
-                            <th scope="col">Kenteken</th>
-                            <th scope="col">Model</th>
-                            <th scope="col">Kleur</th>
-                            <th scope="col">Bereik</th>
-                            <th scope="col">Zitplaatsen</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var car in group.Cars)
-                        {
+                <p class="muted">@group.Category.Description</p>
+                <div class="table-scroll">
+                    <table class="table">
+                        <thead>
                             <tr>
-                                <td class="plate">@LicensePlate.Format(car.Plate)</td>
-                                <td>@car.Make @car.Model</td>
-                                <td>@car.Colour</td>
-                                <td>@car.RangeKm km</td>
-                                <td>@car.Seats</td>
+                                <th scope="col">Kenteken</th>
+                                <th scope="col">Model</th>
+                                <th scope="col">Kleur</th>
+                                <th scope="col">Bereik</th>
+                                <th scope="col">Zitplaatsen</th>
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach (var car in group.Cars)
+                            {
+                                <tr>
+                                    <td class="plate">@LicensePlate.Format(car.Plate)</td>
+                                    <td>@car.Make @car.Model</td>
+                                    <td>@car.Colour</td>
+                                    <td>@car.RangeKm km</td>
+                                    <td>@car.Seats</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </section>
         }
     }

@@ -116,6 +116,8 @@ public class WebEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         {
             builder.ConfigureServices(services =>
             {
+                services.AddHttpClient<FleetApiClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => new TestFleetHandler());
                 services.AddHttpClient<ReservationsApiClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => reservationsHandler);
             });
@@ -139,11 +141,12 @@ public class WebEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.Contains("hx-boost=\"true\"", html);
         Assert.Contains("RequestVerificationToken", html);
         Assert.Contains("htmx", html);
-        Assert.Contains("Thuislocatie niet ingesteld", html);
-        Assert.Contains("Afmelden", html);
-        Assert.Contains("Balie", html);
+        Assert.Contains("Thuislocatie: Utrecht", html);
+        Assert.Contains("<option value=\"utrecht\" selected=\"selected\">Utrecht</option>", html);
+        Assert.Contains("href=\"/.auth/logout\"", html);
+        Assert.Contains("href=\"/balie\"", html);
 
-        var request = Assert.Single(reservationsHandler.Requests);
+        var request = Assert.Single(reservationsHandler.Requests, r => r.Uri.AbsolutePath.StartsWith("/employees/"));
         Assert.Equal(TestPrincipals.KnownId.ToString(), request.Headers[ActingUserHandler.EmployeeHeader]);
         Assert.Equal("true", request.Headers[ActingUserHandler.OperatorHeader]);
     }
@@ -253,11 +256,12 @@ public class WebEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         var htmx = await htmxResponse.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.StartsWith("var htmx=", htmx);
 
-        using var fontResponse = await client.GetAsync(
-            "/fonts/InterVariable.woff2",
-            TestContext.Current.CancellationToken);
-        Assert.Equal(HttpStatusCode.OK, fontResponse.StatusCode);
-        Assert.True(fontResponse.Content.Headers.ContentLength > 0);
+        foreach (var font in new[] { "Inter-Regular.woff2", "Inter-SemiBold.woff2", "Inter-Bold.woff2", "LICENSE.txt" })
+        {
+            using var fontResponse = await client.GetAsync($"/fonts/inter/{font}", TestContext.Current.CancellationToken);
+            Assert.Equal(HttpStatusCode.OK, fontResponse.StatusCode);
+            Assert.True(fontResponse.Content.Headers.ContentLength > 0);
+        }
     }
 
     [Fact]

@@ -7,6 +7,7 @@ using PoolCar.Web.Auth;
 using PoolCar.Web.Availability;
 using PoolCar.Web.Clients;
 using PoolCar.Web.Employees;
+using PoolCar.Web.Offices;
 using PoolCar.Web.Onboarding;
 using PoolCar.Web.Schedule;
 
@@ -42,7 +43,9 @@ builder.Services.AddHttpClient<ReservationsApiClient>((sp, client) =>
 // A retried write could store a booking twice, so API clients only retry reads
 builder.Services.ConfigureAll<HttpStandardResilienceOptions>(options => options.Retry.DisableForUnsafeHttpMethods());
 
+builder.Services.AddMemoryCache();
 builder.Services.AddScoped<CurrentEmployee>();
+builder.Services.AddScoped<OfficeDirectory>();
 builder.Services.AddScoped<AvailabilityService>();
 builder.Services.AddScoped<ScheduleService>();
 
@@ -80,12 +83,15 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error");
+    app.UseExceptionHandler("/fout");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
+
+// Show the Dutch error page for error status codes without a body, such as 404 and 403
+app.UseStatusCodePagesWithReExecute("/fout/{0}");
 
 app.UseRequestLocalization();
 

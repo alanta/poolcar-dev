@@ -1,0 +1,21 @@
+@{
+    var path = Context.Request.Path;
+    var items = new List<(string Href, string Text)>
+    {
+        ("/reserveren", "Reserveren"),
+        ("/nu", "Nu een auto"),
+        ("/mijn-reserveringen", "Mijn reserveringen"),
+        ("/planning", "Planning"),
+        ("/wagenpark", "Wagenpark"),
+    };
+    if (User.IsOperator())
+    {
+        items.Add(("/balie", "Balie"));
+    }
+}
+<ul class="nav-list">
+    @foreach (var (href, text) in items)
+    {
+        <li><a href="@href" aria-current="@(path.StartsWithSegments(href, StringComparison.OrdinalIgnoreCase) ? "page" : null)">@text</a></li>
+    }
+</ul>

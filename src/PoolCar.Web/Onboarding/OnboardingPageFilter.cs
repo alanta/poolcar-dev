@@ -12,7 +12,7 @@ public sealed class OnboardingPageFilter(CurrentEmployee currentEmployee) : IAsy
 {
     public const string WelcomePath = "/welkom";
 
-    private static readonly PathString[] ExcludedPaths = [WelcomePath, "/health", "/alive", "/.auth"];
+    private static readonly PathString[] ExcludedPaths = [WelcomePath, "/fout", "/health", "/alive", "/.auth"];
 
     public Task OnPageHandlerSelectionAsync(PageHandlerSelectedContext context) => Task.CompletedTask;
 
@@ -32,7 +32,7 @@ public sealed class OnboardingPageFilter(CurrentEmployee currentEmployee) : IAsy
         await next();
     }
 
-    /// <summary>The welcome page, the health endpoints, the sign-in endpoints and static files never redirect.</summary>
+    /// <summary>The welcome page, the error page, the health endpoints, the sign-in endpoints and static files never redirect.</summary>
     public static bool IsExcluded(PathString path) =>
         ExcludedPaths.Any(excluded => path.StartsWithSegments(excluded, StringComparison.OrdinalIgnoreCase))
         || Path.HasExtension(path.Value);
