@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using PoolCar.Web.Auth;
 using PoolCar.Web.Clients;
 using PoolCar.Web.Employees;
+using PoolCar.Web.Onboarding;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
@@ -65,9 +66,10 @@ builder.Services.AddAntiforgery(options =>
 
 // Add services to the container and require authentication on all pages
 builder.Services.AddRazorPages(options =>
-{
-    options.Conventions.AuthorizeFolder("/");
-});
+    {
+        options.Conventions.AuthorizeFolder("/");
+    })
+    .AddMvcOptions(options => options.Filters.Add<OnboardingPageFilter>());
 
 var app = builder.Build();
 

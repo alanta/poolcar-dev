@@ -201,13 +201,15 @@ public class WebEndpointTests : IClassFixture<WebApplicationFactory<Program>>
             {
                 services.AddHttpClient<FleetApiClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => fleetHandler);
+                services.AddHttpClient<ReservationsApiClient>()
+                    .ConfigurePrimaryHttpMessageHandler(KnownEmployeeHandler);
             });
         });
 
         using var client = customFactory.CreateClient();
         client.DefaultRequestHeaders.Add(
             EasyAuthAuthenticationDefaults.HeaderName,
-            EasyAuthPrincipalParser.CreateHeader(name: "Jan de Boer", objectId: "3fa85f64-5717-4562-b3fc-2c963f66afa6", roles: []));
+            TestPrincipals.Header(TestPrincipals.KnownId));
 
         // Act
         using var response = await client.GetAsync(path, TestContext.Current.CancellationToken);
