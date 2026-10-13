@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -10,8 +10,16 @@
   <ItemGroup>
     <PackageReference Include="coverlet.collector" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="TngTech.ArchUnitNET.xUnitV3" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PoolCar.Fleet\PoolCar.Fleet.csproj" />
+    <ProjectReference Include="..\..\src\PoolCar.Reservations\PoolCar.Reservations.csproj" />
+    <ProjectReference Include="..\..\src\PoolCar.Web\PoolCar.Web.csproj" />
   </ItemGroup>
 
   <ItemGroup>
