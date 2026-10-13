@@ -26,6 +26,7 @@ public partial class OnboardingTests(WebApplicationFactory<Program> factory) : I
 
     private readonly StubHttpHandler _reservations = new StubHttpHandler()
         .OnJson(HttpMethod.Get, $"/employees/{TestPrincipals.KnownId}", EmployeeJson(TestPrincipals.KnownId, "Bram Testbeek"))
+        .OnJson(HttpMethod.Get, "/reservations/mine", "[]")
         .On(HttpMethod.Put, $"/employees/{TestPrincipals.UnknownId}", _ => StubHttpHandler.Json(
             EmployeeJson(TestPrincipals.UnknownId, "Jan de Boer")));
 

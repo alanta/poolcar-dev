@@ -43,6 +43,7 @@ builder.Services.AddHttpClient<ReservationsApiClient>((sp, client) =>
 // A retried write could store a booking twice, so API clients only retry reads
 builder.Services.ConfigureAll<HttpStandardResilienceOptions>(options => options.Retry.DisableForUnsafeHttpMethods());
 
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<CurrentEmployee>();
 builder.Services.AddScoped<OfficeDirectory>();

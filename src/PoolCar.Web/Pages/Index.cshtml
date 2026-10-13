@@ -2,9 +2,78 @@
 @model IndexModel
 @{
     ViewData["Title"] = "Overzicht";
+    var tasks = new List<(string Href, string Title, string Text)>
+    {
+        ("/reserveren", "Auto reserveren", "Heb je volgende week een auto nodig? Reserveer er een voor een dagdeel of een paar dagen."),
+        ("/nu", "Nu een auto", "Sta je op kantoor en moet je nu weg? Kies een auto die nu vrij is."),
+        ("/mijn-reserveringen", "Mijn reserveringen", "Welke auto is van jou? Haal hem op, lever hem in of annuleer."),
+        ("/zoeken", "Kenteken zoeken", "Van wie is die auto, en is hij vrij? Zoek op kenteken."),
+        ("/planning", "Planning", "Is het volgende week druk? Bekijk per week welke auto's bezet zijn."),
+        ("/wagenpark", "Wagenpark", "Welke auto's hebben we? Bekijk alle auto's per vestiging."),
+    };
 }
 
-<div class="container home-page">
+<div class="container">
     <h1>Hoi @Model.FirstName</h1>
-    <p>Kies in het menu wat je wilt doen.</p>
+
+    <section class="section" aria-labelledby="volgende-reservering">
+        <h2 id="volgende-reservering">@(Model.Next?.PickedUp == true ? "Je bent onderweg" : "Je volgende reservering")</h2>
+        @if (Model.Next is { } next)
+        {
+            <div class="card next-reservation">
+                <div>
+                    <p class="card-meta">
+                        @next.Date · @next.DayPart
+                        @if (next.Overdue)
+                        {
+                            <span class="badge badge-overdue">Te laat</span>
+                        }
+                        else if (next.PickedUp)
+                        {
+                            <span class="badge badge-dark">Onderweg</span>
+                        }
+                    </p>
+                    <p class="card-title">@(next.CarName ?? "Auto") <span class="plate">@next.Plate</span></p>
+                    @if (next.OfficeName is not null)
+                    {
+                        <p class="card-meta">Vestiging @next.OfficeName</p>
+                    }
+                </div>
+                <a class="button button-dark" href="/mijn-reserveringen">Mijn reserveringen</a>
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <p class="empty-state-title">Je hebt geen reservering gepland.</p>
+                <p>Heb je binnenkort een auto nodig? Reserveer er nu een, dan staat hij voor je klaar.</p>
+                <a class="button" href="/reserveren">Auto reserveren</a>
+            </div>
+        }
+    </section>
+
+    <section class="section" aria-labelledby="taken">
+        <h2 id="taken">Wat wil je doen?</h2>
+        <ul class="tiles home-tasks">
+            @foreach (var (href, title, text) in tasks)
+            {
+                var isSearch = href == "/zoeken";
+                <li>
+                    <a class="tile" href="@href" data-focus-search="@(isSearch ? "" : null)" hx-boost="@(isSearch ? "false" : null)">
+                        <span class="tile-title">@title</span>
+                        <span class="tile-text">@text</span>
+                    </a>
+                </li>
+            }
+            @if (Model.IsOperator)
+            {
+                <li>
+                    <a class="tile tile-dark" href="/balie">
+                        <span class="tile-title">Balie</span>
+                        <span class="tile-text">Wat gaat er vandaag uit, wat komt terug en wat is te laat?</span>
+                    </a>
+                </li>
+            }
+        </ul>
+    </section>
 </div>

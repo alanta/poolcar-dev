@@ -186,7 +186,8 @@ public class WebEndpointTests : IClassFixture<WebApplicationFactory<Program>>
     private static StubHttpHandler KnownEmployeeHandler() => new StubHttpHandler().OnJson(
         HttpMethod.Get,
         $"/employees/{TestPrincipals.KnownId}",
-        $$"""{"id":"{{TestPrincipals.KnownId}}","name":"Bram Testbeek","homeOffice":"utrecht","kind":"Seeded"}""");
+        $$"""{"id":"{{TestPrincipals.KnownId}}","name":"Bram Testbeek","homeOffice":"utrecht","kind":"Seeded"}""")
+        .OnJson(HttpMethod.Get, "/reservations/mine", "[]");
 
     [Theory]
     [InlineData("/wagenpark", "/cars?office=utrecht")]

@@ -301,3 +301,10 @@ fieldset { margin: 0; padding: 0; border: 0; }
 @media (prefers-reduced-motion: reduce) {
     .spinner { animation-duration: 2s; }
 }
+
+/* Home */
+.next-reservation { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem 2rem; }
+.next-reservation p { margin-bottom: 0.25rem; }
+@media (min-width: 721px) {
+    .home-tasks .tile { min-height: 10rem; }
+}
