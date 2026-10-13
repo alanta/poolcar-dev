@@ -5,12 +5,12 @@ var builder = DistributedApplication.CreateBuilder(args);
 var postgres = builder.AddPostgres("postgres")
     .WithImageTag("17")
     .WithDataVolume();
-var reservationsDb = postgres.AddDatabase("reservationsdb");
+var reservationsDb = postgres.AddDatabase("reservationsdb", "reservations");
 
 var fleet = builder.AddProject<Projects.PoolCar_Fleet>("fleet")
     .WithHttpHealthCheck("/health");
 var reservations = builder.AddProject<Projects.PoolCar_Reservations>("reservations")
-    .WithReference(reservationsDb)
+    .WithReference(reservationsDb, "reservations")
     .WithHttpHealthCheck("/health")
     .WaitFor(reservationsDb);
 var web = builder.AddProject<Projects.PoolCar_Web>("web")

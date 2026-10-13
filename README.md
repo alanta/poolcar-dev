@@ -23,7 +23,7 @@ Unknown offices or categories in a filter return `400` with a problem details bo
 
 - .NET 10 SDK (the repository pins SDK 10.0.401).
 - Aspire CLI 13.5 or later.
-- Docker, for the local PostgreSQL resource.
+- Docker, for the local PostgreSQL resource and the Reservations database tests.
 - Gitleaks for the pre-commit secret scan. See the [gitleaks installation guide](https://github.com/gitleaks/gitleaks#installing).
 
 Node.js LTS is needed to run the Playwright MCP server in VS Code. PowerShell and Chromium are needed for browser tests.
