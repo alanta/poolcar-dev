@@ -127,12 +127,12 @@ No manual setup is required to run the application locally. Deploying to Azure n
   done
   ```
 
-- [ ] Create the resource group `rg-poolcar` in Sweden Central (`swedencentral`).
+- [ ] Create the resource group `rg-poolcar` in UK South (`uksouth`).
 - [ ] Create the deploy identity:
   - [ ] Entra app registration `poolcar-github` with a federated credential for the subject `repo:alanta@73225/poolcar@1416094794:environment:azure`.
   - [ ] On `rg-poolcar`, assign it Contributor and Role Based Access Control Administrator, with the condition that it may only assign the AcrPull role.
 - [ ] Create the sign-in app:
-  - [ ] Entra app registration `PoolCar` for accounts in any organizational directory (multi-tenant), with ID tokens enabled.
+  - [ ] Entra app registration `PoolCar` for accounts in any organizational directory (multi-tenant), with ID tokens enabled: under Authentication, select "ID tokens" for implicit grant and hybrid flows, or run `az ad app update --id <appId> --enable-id-token-issuance true`. The built-in Container Apps authentication uses the hybrid flow.
   - [ ] App role `FleetOperator` with allowed member type Users/Groups, assigned to the fleet operators.
   - [ ] A client secret.
 - [ ] Create the GitHub environment `azure` with:
