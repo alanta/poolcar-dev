@@ -74,7 +74,7 @@ dotnet husky install
 aspire run
 ```
 
-Open the EasyAuth development proxy at <http://localhost:5000>. On the sign-in form, enter a demo username such as `demo@example.test`; the user ID can be left at its generated value. Enter `FleetOperator` in Roles to try the operator view. The signed-in page shows the user's name, object ID, roles, and the Fleet and Reservations health results.
+Open the EasyAuth development proxy at <http://localhost:5000>. On the sign-in form, enter a demo username such as `demo@example.test`; the user ID can be left at its generated value. Enter `FleetOperator` in Roles to try the operator view.
 
 The Simulator is visible in the Aspire dashboard but does not start by default. To start it, pass `Simulator:Enabled=true` to the AppHost:
 

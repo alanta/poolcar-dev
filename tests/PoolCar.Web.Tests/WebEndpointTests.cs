@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.WebUtilities;
@@ -6,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using PoolCar.Web.Auth;
 using PoolCar.Web.Clients;
+using PoolCar.Web.Tests.Support;
 
 namespace PoolCar.Web.Tests;
 
@@ -106,27 +108,23 @@ public class WebEndpointTests : IClassFixture<WebApplicationFactory<Program>>
     }
 
     [Fact]
-    public async Task AuthenticatedRequest_ToRootPage_RendersUserAndApiHealthOk()
+    public async Task AuthenticatedRequest_ToRootPage_RendersLayoutForEmployee()
     {
         // Arrange
+        var reservationsHandler = KnownEmployeeHandler();
         using var customFactory = _factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {
-                services.AddHttpClient<FleetApiClient>()
-                    .ConfigurePrimaryHttpMessageHandler(() => new TestHealthHandler());
-                services.AddHttpClient<ReservationsClient>()
-                    .ConfigurePrimaryHttpMessageHandler(() => new TestHealthHandler());
+                services.AddHttpClient<ReservationsApiClient>()
+                    .ConfigurePrimaryHttpMessageHandler(() => reservationsHandler);
             });
         });
 
         using var client = customFactory.CreateClient();
-        var header = EasyAuthPrincipalParser.CreateHeader(
-            name: "Jan de Boer",
-            objectId: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-            roles: ["FleetOperator"]);
-
-        client.DefaultRequestHeaders.Add(EasyAuthAuthenticationDefaults.HeaderName, header);
+        client.DefaultRequestHeaders.Add(
+            EasyAuthAuthenticationDefaults.HeaderName,
+            TestPrincipals.Header(TestPrincipals.KnownId, "Bram Testbeek", PoolCarRoles.FleetOperator));
 
         // Act
         using var response = await client.GetAsync("/", TestContext.Current.CancellationToken);
@@ -134,10 +132,8 @@ public class WebEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-        Assert.Contains("Hallo Jan de Boer", html);
-        Assert.Contains("3fa85f64-5717-4562-b3fc-2c963f66afa6", html);
-        Assert.Contains("FleetOperator", html);
-        Assert.Contains("Fleet: ok, Reservations: ok", html);
+        Assert.Contains("Hoi Bram", html);
+        Assert.DoesNotContain("Object-ID", html);
         Assert.Contains("<html lang=\"nl\">", html);
         Assert.Contains("name=\"request-verification-token\"", html);
         Assert.Contains("hx-boost=\"true\"", html);
@@ -146,7 +142,48 @@ public class WebEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.Contains("Thuislocatie niet ingesteld", html);
         Assert.Contains("Afmelden", html);
         Assert.Contains("Balie", html);
+
+        var request = Assert.Single(reservationsHandler.Requests);
+        Assert.Equal(TestPrincipals.KnownId.ToString(), request.Headers[ActingUserHandler.EmployeeHeader]);
+        Assert.Equal("true", request.Headers[ActingUserHandler.OperatorHeader]);
     }
+
+    [Theory]
+    [InlineData(PoolCarRoles.FleetOperator, true)]
+    [InlineData("Employee", false)]
+    public async Task OperatorPolicy_RequiresFleetOperatorRole(string role, bool expected)
+    {
+        var authorization = _factory.Services.GetRequiredService<IAuthorizationService>();
+
+        var result = await authorization.AuthorizeAsync(
+            TestPrincipals.Create(TestPrincipals.KnownId, roles: role),
+            PoolCarPolicies.Operator);
+
+        Assert.Equal(expected, result.Succeeded);
+    }
+
+    [Fact]
+    public async Task ReservationsClient_DoesNotRetryWrites()
+    {
+        var handler = new StubHttpHandler()
+            .On(HttpMethod.Post, "/reservations/now", _ => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
+        using var customFactory = _factory.WithWebHostBuilder(builder =>
+            builder.ConfigureServices(services => services.AddHttpClient<ReservationsApiClient>()
+                .ConfigurePrimaryHttpMessageHandler(() => handler)));
+        using var scope = customFactory.Services.CreateScope();
+        var client = scope.ServiceProvider.GetRequiredService<ReservationsApiClient>();
+
+        var result = await client.BookNowAsync("HPN72V", TestContext.Current.CancellationToken);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(503, result.Problem.Status);
+        Assert.Single(handler.Requests);
+    }
+
+    private static StubHttpHandler KnownEmployeeHandler() => new StubHttpHandler().OnJson(
+        HttpMethod.Get,
+        $"/employees/{TestPrincipals.KnownId}",
+        $$"""{"id":"{{TestPrincipals.KnownId}}","name":"Bram Testbeek","homeOffice":"utrecht","kind":"Seeded"}""");
 
     [Theory]
     [InlineData("/wagenpark", "/cars?office=utrecht")]
@@ -270,19 +307,6 @@ public class WebEndpointTests : IClassFixture<WebApplicationFactory<Program>>
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json")
-            });
-        }
-    }
-
-    private sealed class TestHealthHandler : HttpMessageHandler
-    {
-        protected override Task<HttpResponseMessage> SendAsync(
-            HttpRequestMessage request,
-            CancellationToken cancellationToken)
-        {
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent("Healthy")
             });
         }
     }

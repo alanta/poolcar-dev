@@ -1,24 +1,15 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using PoolCar.Web.Auth;
-using PoolCar.Web.Clients;
+using PoolCar.Web.Employees;
 
 namespace PoolCar.Web.Pages;
 
-public class IndexModel(FleetApiClient fleetClient, ReservationsClient reservationsClient) : PageModel
+public class IndexModel(CurrentEmployee currentEmployee) : PageModel
 {
-    public string UserName { get; private set; } = string.Empty;
-    public string ObjectId { get; private set; } = string.Empty;
-    public IReadOnlyList<string> Roles { get; private set; } = [];
-    public string FleetStatus { get; private set; } = string.Empty;
-    public string ReservationsStatus { get; private set; } = string.Empty;
+    public string FirstName { get; private set; } = string.Empty;
 
     public async Task OnGetAsync()
     {
-        UserName = User.GetName() ?? string.Empty;
-        ObjectId = User.GetObjectId() ?? string.Empty;
-        Roles = User.GetRoles();
-
-        FleetStatus = await fleetClient.CheckHealthAsync(HttpContext.RequestAborted);
-        ReservationsStatus = await reservationsClient.CheckHealthAsync(HttpContext.RequestAborted);
+        await currentEmployee.LoadAsync(HttpContext.RequestAborted);
+        FirstName = currentEmployee.FirstName;
     }
 }

@@ -1,9 +1,11 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Options;
 using PoolCar.Web.Auth;
 using PoolCar.Web.Clients;
+using PoolCar.Web.Employees;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
@@ -25,17 +27,28 @@ builder.Services.AddHttpClient<FleetApiClient>((sp, client) =>
     client.BaseAddress = options.BaseAddress;
 });
 
-builder.Services.AddHttpClient<ReservationsClient>((sp, client) =>
-{
-    var options = sp.GetRequiredService<IOptions<ReservationsApiOptions>>().Value;
-    client.BaseAddress = options.BaseAddress;
-});
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<ActingUserHandler>();
+builder.Services.AddHttpClient<ReservationsApiClient>((sp, client) =>
+    {
+        var options = sp.GetRequiredService<IOptions<ReservationsApiOptions>>().Value;
+        client.BaseAddress = options.BaseAddress;
+    })
+    .AddHttpMessageHandler<ActingUserHandler>();
+
+// A retried write could store a booking twice, so API clients only retry reads
+builder.Services.ConfigureAll<HttpStandardResilienceOptions>(options => options.Retry.DisableForUnsafeHttpMethods());
+
+builder.Services.AddScoped<CurrentEmployee>();
 
 // Configure EasyAuth as default authentication scheme
 builder.Services.AddAuthentication(EasyAuthAuthenticationDefaults.AuthenticationScheme)
     .AddEasyAuth();
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy(PoolCarPolicies.Operator, policy => policy
+        .RequireAuthenticatedUser()
+        .RequireClaim(EasyAuthClaimTypes.Roles, PoolCarRoles.FleetOperator));
 
 var dutchCulture = new CultureInfo("nl-NL");
 builder.Services.Configure<RequestLocalizationOptions>(options =>
