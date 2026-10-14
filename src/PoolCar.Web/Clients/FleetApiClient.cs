@@ -22,10 +22,12 @@ public class FleetApiClient(HttpClient httpClient)
     }
 
     public async Task<IReadOnlyList<FleetOffice>> GetOfficesAsync(CancellationToken cancellationToken = default) =>
-        await httpClient.GetFromJsonAsync<List<FleetOffice>>("/offices", cancellationToken) ?? [];
+        await CallAsync(() => httpClient.GetFromJsonAsync<List<FleetOffice>>("/offices", cancellationToken), cancellationToken)
+            ?? [];
 
     public async Task<IReadOnlyList<FleetCategory>> GetCategoriesAsync(CancellationToken cancellationToken = default) =>
-        await httpClient.GetFromJsonAsync<List<FleetCategory>>("/categories", cancellationToken) ?? [];
+        await CallAsync(() => httpClient.GetFromJsonAsync<List<FleetCategory>>("/categories", cancellationToken), cancellationToken)
+            ?? [];
 
     public async Task<IReadOnlyList<FleetCar>> GetCarsAsync(
         string? office = null,
@@ -44,21 +46,25 @@ public class FleetApiClient(HttpClient httpClient)
         }
 
         var uri = query.Count == 0 ? "/cars" : $"/cars?{string.Join('&', query)}";
-        return await httpClient.GetFromJsonAsync<List<FleetCar>>(uri, cancellationToken) ?? [];
+        return await CallAsync(() => httpClient.GetFromJsonAsync<List<FleetCar>>(uri, cancellationToken), cancellationToken)
+            ?? [];
     }
 
     /// <summary>The car with the plate, or null when the plate is unknown.</summary>
-    public async Task<FleetCar?> GetCarAsync(string plate, CancellationToken cancellationToken = default)
-    {
-        using var response = await httpClient.GetAsync($"/cars/{Uri.EscapeDataString(plate)}", cancellationToken);
-        if (response.StatusCode == HttpStatusCode.NotFound)
-        {
-            return null;
-        }
+    public Task<FleetCar?> GetCarAsync(string plate, CancellationToken cancellationToken = default) =>
+        CallAsync(
+            async () =>
+            {
+                using var response = await httpClient.GetAsync($"/cars/{Uri.EscapeDataString(plate)}", cancellationToken);
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return null;
+                }
 
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<FleetCar>(cancellationToken);
-    }
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadFromJsonAsync<FleetCar>(cancellationToken);
+            },
+            cancellationToken);
 
     /// <summary>The cars with the given plates; unknown plates are left out.</summary>
     public async Task<IReadOnlyList<FleetCar>> GetCarsByPlatesAsync(
@@ -69,7 +75,9 @@ public class FleetApiClient(HttpClient httpClient)
         foreach (var batch in plates.Distinct().Chunk(MaxPlatesPerRequest))
         {
             var uri = $"/cars?plates={string.Join(',', batch.Select(Uri.EscapeDataString))}";
-            cars.AddRange(await httpClient.GetFromJsonAsync<List<FleetCar>>(uri, cancellationToken) ?? []);
+            cars.AddRange(
+                await CallAsync(() => httpClient.GetFromJsonAsync<List<FleetCar>>(uri, cancellationToken), cancellationToken)
+                ?? []);
         }
 
         return cars;
@@ -84,6 +92,21 @@ public class FleetApiClient(HttpClient httpClient)
         }
 
         var uri = $"/cars/search?q={Uri.EscapeDataString(query)}";
-        return await httpClient.GetFromJsonAsync<List<FleetCar>>(uri, cancellationToken) ?? [];
+        return await CallAsync(() => httpClient.GetFromJsonAsync<List<FleetCar>>(uri, cancellationToken), cancellationToken)
+            ?? [];
+    }
+
+    /// <summary>Turns a connection failure, timeout or server error into a <see cref="ServiceUnavailableException"/>;
+    /// other errors, such as a 4xx status, are thrown as they are.</summary>
+    private static async Task<T> CallAsync<T>(Func<Task<T>> call, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await call();
+        }
+        catch (Exception exception) when (ServiceUnavailableException.IsOutage(exception, cancellationToken))
+        {
+            throw new ServiceUnavailableException(BackendService.Fleet, exception);
+        }
     }
 }

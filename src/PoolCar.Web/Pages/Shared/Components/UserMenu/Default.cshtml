@@ -3,7 +3,10 @@
     <summary><span class="visually-hidden">Gebruikersmenu van </span><span class="menu-label">@Model.Name</span></summary>
     <div class="menu-panel">
         <p><strong>@Model.Name</strong></p>
-        <p class="muted">Thuislocatie: @(Model.HomeOfficeName ?? "niet ingesteld")</p>
+        @if (Model.DetailsLoaded)
+        {
+            <p class="muted">Thuislocatie: @(Model.HomeOfficeName ?? "niet ingesteld")</p>
+        }
         @if (Model.HomeOffice is not null && Model.Offices.Count > 0)
         {
             <form method="post" asp-page="/Thuislocatie" class="stack">

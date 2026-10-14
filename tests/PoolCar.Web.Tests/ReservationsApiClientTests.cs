@@ -42,18 +42,43 @@ public class ReservationsApiClientTests
     }
 
     [Fact]
-    public async Task GetEmployeeAsync_WhenServerFails_Throws()
+    public async Task GetEmployeeAsync_WhenServerFails_ThrowsServiceUnavailable()
     {
         var handler = new StubHttpHandler().On(
             HttpMethod.Get,
             $"/employees/{TestPrincipals.KnownId}",
             _ => new HttpResponseMessage(HttpStatusCode.InternalServerError));
 
-        var exception = await Should.ThrowAsync<ApiProblemException>(
+        var exception = await Should.ThrowAsync<ServiceUnavailableException>(
             () => CreateClient(handler).GetEmployeeAsync(TestPrincipals.KnownId, Token));
 
-        exception.Problem.Status.ShouldBe(500);
-        exception.Problem.Detail.ShouldBe(ApiProblem.FallbackDetail);
+        exception.Service.ShouldBe(BackendService.Reservations);
+    }
+
+    [Fact]
+    public async Task GetEmployeeAsync_WhenConnectionFails_ThrowsServiceUnavailable()
+    {
+        var handler = new StubHttpHandler().On(
+            HttpMethod.Get,
+            $"/employees/{TestPrincipals.KnownId}",
+            _ => throw new HttpRequestException(HttpRequestError.SecureConnectionError, "The SSL connection could not be established."));
+
+        var exception = await Should.ThrowAsync<ServiceUnavailableException>(
+            () => CreateClient(handler).GetEmployeeAsync(TestPrincipals.KnownId, Token));
+
+        exception.Service.ShouldBe(BackendService.Reservations);
+        exception.InnerException.ShouldBeOfType<HttpRequestException>();
+    }
+
+    [Fact]
+    public async Task PickUpAsync_WhenServerFails_ThrowsServiceUnavailable()
+    {
+        var handler = new StubHttpHandler().On(
+            HttpMethod.Post,
+            $"/periods/{Guid.Empty}/pickup",
+            _ => new HttpResponseMessage(HttpStatusCode.BadGateway));
+
+        await Should.ThrowAsync<ServiceUnavailableException>(() => CreateClient(handler).PickUpAsync(Guid.Empty, Token));
     }
 
     [Fact]

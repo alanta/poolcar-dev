@@ -1,27 +1,39 @@
 @page "/fout/{status:int?}"
 @model FoutModel
 @{
-    var (title, message) = Model.Status switch
+    ViewData["Title"] = Model.Title;
+    var isPartial = HttpContext.Request.IsHtmxPartial();
+    if (Model.Status == StatusCodes.Status503ServiceUnavailable)
     {
-        404 => ("Pagina niet gevonden", "Deze pagina bestaat niet (meer). Controleer het adres, of zoek een auto op kenteken."),
-        403 => ("Geen toegang", "Je hebt geen toegang tot deze pagina. Deze pagina is alleen voor medewerkers van de balie."),
-        < 500 => ("Dat lukte niet", "Je verzoek kon niet worden verwerkt. Ga terug en probeer het opnieuw."),
-        _ => ("Er ging iets mis", "Sorry, er ging aan onze kant iets mis. Probeer het over een paar minuten opnieuw."),
-    };
-    ViewData["Title"] = title;
-}
-
-<div class="container">
-    <h1>@title</h1>
-    <p class="lead">@message</p>
-
-    @if (Model.Status >= 500)
-    {
-        <p>Blijft het misgaan? Geef dan deze code door aan de servicedesk:</p>
-        <p><code class="trace-id">@Model.TraceId</code></p>
+        HttpContext.Response.Headers[PoolCar.Web.Outages.ServiceUnavailableMiddleware.MarkerHeader] = "true";
     }
 
-    <div class="button-row">
-        <a class="button button-dark" href="/">Naar het overzicht</a>
+    if (isPartial)
+    {
+        // Keep the page and its address as they are and only show the message
+        Layout = null;
+        HttpContext.Response.Headers[HtmxRequestExtensions.ReswapHeader] = "none";
+        HttpContext.Response.Headers[HtmxRequestExtensions.PushUrlHeader] = "false";
+    }
+}
+@if (isPartial)
+{
+    <partial name="_ToastOob" model="Toast.Error(Model.Message)" />
+}
+else
+{
+    <div class="container">
+        <h1>@Model.Title</h1>
+        <p class="lead">@Model.Message</p>
+
+        @if (Model.Status >= 500)
+        {
+            <p>Blijft het misgaan? Geef dan deze code door aan de servicedesk:</p>
+            <p><code class="trace-id">@Model.TraceId</code></p>
+        }
+
+        <div class="button-row">
+            <a class="button button-dark" href="/">Naar het overzicht</a>
+        </div>
     </div>
-</div>
+}
