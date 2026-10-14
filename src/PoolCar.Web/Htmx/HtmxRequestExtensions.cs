@@ -6,6 +6,8 @@ public static class HtmxRequestExtensions
     public const string BoostedHeader = "HX-Boosted";
     public const string RedirectHeader = "HX-Redirect";
     public const string HistoryRestoreHeader = "HX-History-Restore-Request";
+    public const string ReswapHeader = "HX-Reswap";
+    public const string PushUrlHeader = "HX-Push-Url";
 
     /// <summary>Whether htmx sent the request, including boosted links and forms.</summary>
     public static bool IsHtmx(this HttpRequest request) => IsTrue(request, RequestHeader);

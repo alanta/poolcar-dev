@@ -9,6 +9,7 @@ using PoolCar.Web.Clients;
 using PoolCar.Web.Employees;
 using PoolCar.Web.Offices;
 using PoolCar.Web.Onboarding;
+using PoolCar.Web.Outages;
 using PoolCar.Web.Schedule;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -93,6 +94,9 @@ app.UseHttpsRedirection();
 
 // Show the Dutch error page for error status codes without a body, such as 404 and 403
 app.UseStatusCodePagesWithReExecute("/fout/{0}");
+
+// Show which part is unavailable when the Fleet or Reservations API cannot be reached
+app.UseMiddleware<ServiceUnavailableMiddleware>();
 
 app.UseRequestLocalization();
 

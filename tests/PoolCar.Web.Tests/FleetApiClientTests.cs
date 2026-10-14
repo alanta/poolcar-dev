@@ -144,6 +144,55 @@ public class FleetApiClientTests
         Assert.Empty(handler.Requests);
     }
 
+    [Fact]
+    public async Task GetOfficesAsync_WhenConnectionFails_ThrowsServiceUnavailable()
+    {
+        var handler = new StubHttpHandler().On(
+            HttpMethod.Get,
+            "/offices",
+            _ => throw new HttpRequestException(HttpRequestError.ConnectionError, "Connection refused"));
+
+        var exception = await Assert.ThrowsAsync<ServiceUnavailableException>(
+            () => CreateClient(handler).GetOfficesAsync(TestContext.Current.CancellationToken));
+
+        Assert.Equal(BackendService.Fleet, exception.Service);
+        Assert.IsType<HttpRequestException>(exception.InnerException);
+    }
+
+    [Fact]
+    public async Task GetCarAsync_WhenServerFails_ThrowsServiceUnavailable()
+    {
+        var handler = new StubHttpHandler().On(
+            HttpMethod.Get,
+            "/cars/HPN72V",
+            _ => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
+
+        await Assert.ThrowsAsync<ServiceUnavailableException>(
+            () => CreateClient(handler).GetCarAsync("HPN72V", TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task GetCarsAsync_WhenRequestIsInvalid_ThrowsHttpRequestException()
+    {
+        var handler = new StubHttpHandler().On(HttpMethod.Get, "/cars", _ => new HttpResponseMessage(HttpStatusCode.BadRequest));
+
+        var exception = await Assert.ThrowsAsync<HttpRequestException>(
+            () => CreateClient(handler).GetCarsAsync(cancellationToken: TestContext.Current.CancellationToken));
+
+        Assert.Equal(HttpStatusCode.BadRequest, exception.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetCarsAsync_WhenCancelled_IsNotAnOutage()
+    {
+        using var cancellation = new CancellationTokenSource();
+        await cancellation.CancelAsync();
+        var handler = new StubHttpHandler().On(HttpMethod.Get, "/cars", _ => throw new OperationCanceledException(cancellation.Token));
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => CreateClient(handler).GetCarsAsync(cancellationToken: cancellation.Token));
+    }
+
     private static FleetApiClient CreateClient(StubHttpHandler handler) =>
         new(new HttpClient(handler) { BaseAddress = new Uri("http://fleet") });
 
