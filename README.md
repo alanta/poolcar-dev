@@ -154,6 +154,8 @@ The Deploy workflow deploys a named deployment to `rg-poolcar`. Pushes to `main`
 
 A run deploys the shared infrastructure, builds the Web, Fleet, Reservations and DbSetup images and pushes them tagged with the commit SHA, runs the database setup job, and then deploys the apps. The job runs as `id-poolcar-dbadmin`, which owns the deployment's database: it creates the database, applies the Reservations migrations, seeds an empty database and gives the deployment's identity access to the data, but not to the schema. Reservations doesn't migrate or seed in Azure. The run summary shows the web URL and redirect URI. Runs are queued one at a time, also across deployments, because they share the PostgreSQL server.
 
+The apps run one replica on weekdays from 9:00 to 17:00 Dutch time and scale to zero otherwise, so the first request outside those hours waits for a cold start.
+
 To add a deployment, run the workflow with a new name, then add its redirect URI to the `PoolCar` app registration.
 
 `reset-data` drops the deployment's database before setup, which creates, migrates and seeds it again with the employees and sample bookings, relative to the day they're seeded.
