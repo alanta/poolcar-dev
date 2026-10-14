@@ -17,8 +17,6 @@ param easyAuthClientId string
 @description('Client secret of the EasyAuth app registration.')
 param easyAuthClientSecret string
 
-param minReplicas int = 1
-
 param registryName string = 'crpoolcar'
 param postgresServerName string = 'psql-poolcar'
 
@@ -60,7 +58,6 @@ module fleet 'modules/container-app.bicep' = {
     registryServer: registryServer
     image: '${registryServer}/poolcar-fleet:${imageTag}'
     pullIdentityId: pullIdentity.id
-    minReplicas: minReplicas
     env: [
       appInsightsEnv
       { name: 'OTEL_SERVICE_NAME', value: '${deploymentName}-fleet' }
@@ -77,7 +74,6 @@ module reservations 'modules/container-app.bicep' = {
     image: '${registryServer}/poolcar-reservations:${imageTag}'
     pullIdentityId: pullIdentity.id
     identityIds: [reservationsIdentity.id]
-    minReplicas: minReplicas
     env: [
       appInsightsEnv
       { name: 'OTEL_SERVICE_NAME', value: '${deploymentName}-reservations' }
@@ -99,7 +95,6 @@ module web 'modules/container-app.bicep' = {
     registryServer: registryServer
     image: '${registryServer}/poolcar-web:${imageTag}'
     pullIdentityId: pullIdentity.id
-    minReplicas: minReplicas
     externalIngress: true
     easyAuthClientId: easyAuthClientId
     easyAuthClientSecret: easyAuthClientSecret

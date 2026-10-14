@@ -12,7 +12,6 @@ param identityIds string[] = []
 
 param env object[]
 param externalIngress bool = false
-param minReplicas int
 
 @description('Entra ID client ID for EasyAuth; leave empty to disable EasyAuth.')
 param easyAuthClientId string = ''
@@ -72,8 +71,32 @@ resource app 'Microsoft.App/containerApps@2025-07-01' = {
           ]
         }
       ]
+      // One replica on weekdays 9:00-17:00 Dutch time; otherwise scale to zero and start on a request.
       scale: {
-        minReplicas: minReplicas
+        minReplicas: 0
+        maxReplicas: 1
+        rules: [
+          {
+            name: 'business-hours'
+            custom: {
+              type: 'cron'
+              metadata: {
+                timezone: 'Europe/Amsterdam'
+                start: '0 9 * * 1-5'
+                end: '0 17 * * 1-5'
+                desiredReplicas: '1'
+              }
+            }
+          }
+          {
+            name: 'http'
+            http: {
+              metadata: {
+                concurrentRequests: '10'
+              }
+            }
+          }
+        ]
       }
     }
   }
