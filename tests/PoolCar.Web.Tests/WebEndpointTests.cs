@@ -143,7 +143,7 @@ public class WebEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.Contains("htmx", html);
         Assert.Contains("Thuislocatie: Utrecht", html);
         Assert.Contains("<option value=\"utrecht\" selected=\"selected\">Utrecht</option>", html);
-        Assert.Contains("href=\"/.auth/logout\"", html);
+        Assert.Contains("<a href=\"/.auth/logout?post_logout_redirect_uri=/\" hx-boost=\"false\">Afmelden</a>", html);
         Assert.Contains("href=\"/balie\"", html);
 
         var request = Assert.Single(reservationsHandler.Requests, r => r.Uri.AbsolutePath.StartsWith("/employees/"));

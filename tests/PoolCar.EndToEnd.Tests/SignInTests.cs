@@ -18,4 +18,16 @@ public class SignInTests(PoolCarApp app) : EndToEndTest(app)
         await Expect(Page.GetByRole(AriaRole.Banner)).ToContainTextAsync(employee.Name);
         new Uri(Page.Url).AbsolutePath.ShouldBe("/");
     }
+
+    [Fact]
+    public async Task Employee_signs_out_and_sees_the_sign_in_form()
+    {
+        await SignInAsync(SeededEmployees.Utrecht);
+
+        await Page.Locator("summary", new() { HasText = "Gebruikersmenu van" }).ClickAsync();
+        await Page.GetByRole(AriaRole.Link, new() { Name = "Afmelden" }).ClickAsync();
+
+        await Expect(Page.GetByRole(AriaRole.Button, new() { Name = "Login" })).ToBeVisibleAsync();
+        (await Page.Context.CookiesAsync()).ShouldNotContain(c => c.Name == "EasyAuthDev");
+    }
 }
