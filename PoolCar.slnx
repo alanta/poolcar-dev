@@ -13,6 +13,7 @@
     <Project Path="tests/PoolCar.EndToEnd.Tests/PoolCar.EndToEnd.Tests.csproj" />
     <Project Path="tests/PoolCar.Fleet.Tests/PoolCar.Fleet.Tests.csproj" />
     <Project Path="tests/PoolCar.Reservations.Tests/PoolCar.Reservations.Tests.csproj" />
+    <Project Path="tests/PoolCar.ServiceDefaults.Tests/PoolCar.ServiceDefaults.Tests.csproj" />
     <Project Path="tests/PoolCar.Web.Tests/PoolCar.Web.Tests.csproj" />
   </Folder>
 </Solution>
