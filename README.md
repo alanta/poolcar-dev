@@ -168,7 +168,7 @@ az containerapp delete -g rg-poolcar -n ca-scratch-reservations --yes
 az containerapp delete -g rg-poolcar -n ca-scratch-fleet --yes
 az containerapp job delete -g rg-poolcar -n caj-scratch-dbsetup --yes
 az identity delete -g rg-poolcar -n id-poolcar-scratch
-az postgres flexible-server db delete -g rg-poolcar -s psql-poolcar -d poolcar_scratch --yes
+az postgres flexible-server db delete -g rg-poolcar -s psql-poolcar -n poolcar_scratch --yes
 ```
 
 | Scope | Resources |
