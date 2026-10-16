@@ -18,6 +18,7 @@
   <ItemGroup>
     <PackageReference Include="Alanta.Aspire.Hosting.EasyAuthProxy" />
     <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+    <PackageReference Include="MessagePack" />
   </ItemGroup>
 
 </Project>
