@@ -15,7 +15,8 @@ PoolCar is an internal shared-car application. Web is the authenticated user ent
 
 ## Run and test
 
-- Start local services with `aspire run`; open the EasyAuth proxy at `http://localhost:5000` and sign in with a demo identity.
+- Start local services with `scripts/run-local.sh` (`aspire run --isolated`); it prints `PoolCar web UI: <url>` when the EasyAuth proxy is healthy. Open that URL and sign in with a demo identity.
+- Never pin or assume ports: Aspire assigns them so worktrees can run side by side. Read the proxy URL with `aspire describe easyauth --apphost src/PoolCar.AppHost/PoolCar.AppHost.csproj --format Json`.
 - Restore local tools with `dotnet tool restore`, then install hooks with `dotnet husky install`.
 - Install gitleaks before committing; the hook fails explicitly when it is unavailable.
 - Build with `dotnet build PoolCar.slnx`; run tests with `dotnet test PoolCar.slnx`.

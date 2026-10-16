@@ -25,7 +25,6 @@ public sealed class PoolCarApp : IAsyncLifetime
         using var timeout = new CancellationTokenSource(StartupTimeout);
 
         var builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.PoolCar_AppHost>(timeout.Token);
-        UseRandomProxyPort(builder);
         UseFreshDatabase(builder);
 
         _app = await builder.BuildAsync(timeout.Token);
@@ -49,16 +48,6 @@ public sealed class PoolCarApp : IAsyncLifetime
         if (_app is not null)
         {
             await _app.DisposeAsync();
-        }
-    }
-
-    // The AppHost pins the proxy to port 5000 for local use; tests must not clash with a running instance.
-    private static void UseRandomProxyPort(IDistributedApplicationTestingBuilder builder)
-    {
-        foreach (var endpoint in builder.Resources.OfType<IEasyAuthProxyResource>()
-                     .SelectMany(proxy => proxy.Annotations.OfType<EndpointAnnotation>()))
-        {
-            endpoint.Port = null;
         }
     }
 

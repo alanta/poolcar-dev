@@ -23,7 +23,6 @@ var web = builder.AddProject<Projects.PoolCar_Web>("web")
     .WaitFor(reservations);
 
 builder.AddEasyAuthProxy("easyauth")
-    .WithBackend(web)
-    .WithHostPort(5000);
+    .WithBackend(web);
 
 builder.Build().Run();

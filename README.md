@@ -71,10 +71,10 @@ Restore the repository tools, install the Git hooks, then start Aspire:
 ```sh
 dotnet tool restore
 dotnet husky install
-aspire run
+scripts/run-local.sh
 ```
 
-Open the EasyAuth development proxy at <http://localhost:5000>. On the sign-in form, enter a demo username such as `demo@example.test`; the user ID can be left at its generated value. Enter `FleetOperator` in Roles to try the operator view.
+The script runs `aspire run --isolated`, so Aspire assigns every port and several worktrees can run side by side. It needs `jq`. Once the EasyAuth development proxy is healthy, the script prints `PoolCar web UI: <url>`; the proxy URL is also shown on the Aspire dashboard. Open that URL. On the sign-in form, enter a demo username such as `demo@example.test`; the user ID can be left at its generated value. Enter `FleetOperator` in Roles to try the operator view.
 
 ## Seeded employees
 
@@ -112,7 +112,7 @@ Open the repository in its Dev Container to get the .NET SDK, Aspire CLI, Docker
 
 ## Playwright MCP
 
-The pinned Playwright MCP server is configured in `.vscode/mcp.json`. Start the app with `aspire run`, open the EasyAuth proxy URL, and sign in with a demo user before exploring the app.
+The pinned Playwright MCP server is configured in `.vscode/mcp.json`. Start the app with `scripts/run-local.sh`, open the EasyAuth proxy URL, and sign in with a demo user before exploring the app.
 
 ## Manual setup
 

@@ -1,0 +1,12 @@
+instructions: |
+  Start the application with the Run script. It launches the Aspire AppHost in isolated mode, so every
+  worktree gets its own ports. The script prints the Aspire dashboard login URL and, once the EasyAuth
+  proxy is healthy, the line "PoolCar web UI: <url>". Never assume a fixed port; read the proxy URL with
+  `aspire describe easyauth --apphost src/PoolCar.AppHost/PoolCar.AppHost.csproj --format Json`.
+
+scripts:
+  - name: Run PoolCar with Aspire
+    command: scripts/run-local.sh
+
+server_ready_pattern: 'PoolCar web UI:\s+(https?://\S+)'
+auto_open_in_browser: true
