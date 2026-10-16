@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.ServiceDiscovery;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 namespace Microsoft.Extensions.Hosting;
@@ -88,10 +89,18 @@ public static class Extensions
             builder.Services.AddOpenTelemetry().UseOtlpExporter();
         }
 
-        // The cloud role name comes from OTEL_SERVICE_NAME.
         if (!string.IsNullOrEmpty(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]))
         {
-            builder.Services.AddOpenTelemetry().UseAzureMonitor();
+            var openTelemetry = builder.Services.AddOpenTelemetry().UseAzureMonitor();
+
+            // The cloud role name comes from service.name. UseAzureMonitor's Container Apps
+            // resource detector overrides it with CONTAINER_APP_NAME, so restore OTEL_SERVICE_NAME.
+            var serviceName = builder.Configuration["OTEL_SERVICE_NAME"];
+            if (!string.IsNullOrEmpty(serviceName))
+            {
+                openTelemetry.ConfigureResource(resource =>
+                    resource.AddAttributes([new("service.name", serviceName)]));
+            }
         }
 
         return builder;
