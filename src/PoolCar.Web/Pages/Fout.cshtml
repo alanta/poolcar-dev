@@ -8,6 +8,11 @@
         HttpContext.Response.Headers[PoolCar.Web.Outages.ServiceUnavailableMiddleware.MarkerHeader] = "true";
     }
 
+    if (Model.IsExpired)
+    {
+        HttpContext.Response.Headers[PoolCar.Web.ExpiredForms.ExpiredFormFilter.MarkerHeader] = "true";
+    }
+
     if (isPartial)
     {
         // Keep the page and its address as they are and only show the message
@@ -18,7 +23,8 @@
 }
 @if (isPartial)
 {
-    <partial name="_ToastOob" model="Toast.Error(Model.Message)" />
+    var link = Model.IsExpired ? new ToastLink("Pagina opnieuw laden", Model.ReloadUrl) : null;
+    <partial name="_ToastOob" model="Toast.Error(Model.Message, link)" />
 }
 else
 {
@@ -33,7 +39,15 @@ else
         }
 
         <div class="button-row">
-            <a class="button button-dark" href="/">Naar het overzicht</a>
+            @if (Model.IsExpired)
+            {
+                @* A full page load, because a boosted swap keeps the expired token in the hx-headers of <body> *@
+                <a class="button button-dark" href="@Model.ReloadUrl" hx-boost="false">Pagina opnieuw laden</a>
+            }
+            else
+            {
+                <a class="button button-dark" href="/">Naar het overzicht</a>
+            }
         </div>
     </div>
 }

@@ -2,7 +2,13 @@
 @{
     var isError = Model.Kind == PoolCar.Web.Htmx.ToastKind.Error;
 }
-<div class="toast @(isError ? "toast-error" : "toast-success")" role="@(isError ? "alert" : "status")">
-    <p class="toast-message">@Model.Message</p>
+<div class="toast @(isError ? "toast-error" : "toast-success") @(Model.Link is null ? null : "toast-sticky")" role="@(isError ? "alert" : "status")">
+    <p class="toast-message">
+        @Model.Message
+        @if (Model.Link is { } link)
+        {
+            <a class="toast-link" href="@link.Url" hx-boost="false">@link.Text</a>
+        }
+    </p>
     <button type="button" class="toast-close" data-toast-close aria-label="Sluiten">&times;</button>
 </div>

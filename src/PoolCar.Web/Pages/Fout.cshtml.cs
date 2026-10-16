@@ -3,13 +3,15 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using PoolCar.Web.Clients;
+using PoolCar.Web.ExpiredForms;
 using PoolCar.Web.Outages;
 
 namespace PoolCar.Web.Pages;
 
 /// <summary>The error page for unhandled exceptions and for error status codes without a body. It has no
 /// handlers, so it renders for every method of the request that failed. It never calls the APIs, so it also renders
-/// when they are unavailable. An htmx request that swaps part of the page gets the message as a toast.</summary>
+/// when they are unavailable. An htmx request that swaps part of the page gets the message as a toast. A form posted
+/// from a page that has expired gets a 400 with a link to reload that page.</summary>
 [AllowAnonymous]
 [IgnoreAntiforgeryToken]
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -19,9 +21,15 @@ public class FoutModel : PageModel
         ? status
         : StatusCodes.Status500InternalServerError;
 
+    public const string ExpiredMessage = "Deze pagina is verlopen. Laad de pagina opnieuw en probeer het nog eens.";
+
+    public bool IsExpired => Status == StatusCodes.Status400BadRequest && ExpiredFormFilter.IsExpired(HttpContext);
+
+    public string ReloadUrl => ExpiredFormFilter.GetReloadUrl(Request);
+
     public string TraceId => Activity.Current?.Id ?? HttpContext.TraceIdentifier;
 
-    public string Title => Status switch
+    public string Title => IsExpired ? "Pagina verlopen" : Status switch
     {
         404 => "Pagina niet gevonden",
         403 => "Geen toegang",
@@ -30,7 +38,7 @@ public class FoutModel : PageModel
         _ => "Er ging iets mis",
     };
 
-    public string Message => Status switch
+    public string Message => IsExpired ? ExpiredMessage : Status switch
     {
         404 => "Deze pagina bestaat niet (meer). Controleer het adres, of zoek een auto op kenteken.",
         403 => "Je hebt geen toegang tot deze pagina. Deze pagina is alleen voor medewerkers van de balie.",

@@ -7,11 +7,13 @@ htmx.config.responseHandling = [
     { code: "...", swap: false },
 ];
 
-// A backend service is unavailable: show the app's own error page, or only a toast for a partial swap. Other 503
-// responses, for example from the ingress during a restart, are not swapped.
+// A backend service is unavailable, or the page expired because its form token is no longer valid: show the app's
+// own error page, or only a toast for a partial swap. Other 503 responses, for example from the ingress during a
+// restart, and other 400 responses are not swapped.
 document.addEventListener("htmx:beforeSwap", (event) => {
     const xhr = event.detail.xhr;
-    if (xhr.status === 503 && xhr.getResponseHeader("X-PoolCar-Unavailable") === "true") {
+    if ((xhr.status === 503 && xhr.getResponseHeader("X-PoolCar-Unavailable") === "true")
+        || (xhr.status === 400 && xhr.getResponseHeader("X-PoolCar-Expired") === "true")) {
         event.detail.shouldSwap = true;
         event.detail.isError = false;
     }

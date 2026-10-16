@@ -47,6 +47,7 @@ PoolCar is an internal shared-car application. Web is the authenticated user ent
 | `HtmxRedirect` sends `HX-Redirect` for htmx and a normal redirect otherwise. | `Pages/Nu.cshtml.cs` |
 | Inline confirmation swaps the card for a confirm variant; without JavaScript the page renders it. | `OnGetCancelAsync` in `Pages/MijnReserveringen.cshtml.cs` |
 | `409` and `422` partials are swapped in by `htmx.config.responseHandling`. | `wwwroot/js/site.js`, `Pages/Reserveren.cshtml.cs` |
+| A failed antiforgery check is an expired page: `ExpiredFormFilter` marks it, `/fout/400` shows a reload link or toast, and `site.js` swaps only 400s with `X-PoolCar-Expired`. | `ExpiredForms/ExpiredFormFilter.cs`, `Pages/Fout.cshtml` |
 | Polling with `hx-trigger="every 30s"` and `hx-sync`. | `Pages/_BalieBoard.cshtml` |
 | `hx-boost` and the antiforgery `RequestVerificationToken` header are set on `<body>`. | `Pages/Shared/_Layout.cshtml` |
 

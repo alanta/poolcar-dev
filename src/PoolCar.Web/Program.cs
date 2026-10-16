@@ -7,6 +7,7 @@ using PoolCar.Web.Auth;
 using PoolCar.Web.Availability;
 using PoolCar.Web.Clients;
 using PoolCar.Web.Employees;
+using PoolCar.Web.ExpiredForms;
 using PoolCar.Web.Offices;
 using PoolCar.Web.Onboarding;
 using PoolCar.Web.Outages;
@@ -73,12 +74,21 @@ builder.Services.AddAntiforgery(options =>
     options.HeaderName = "RequestVerificationToken";
 });
 
+// The data protection keys are not persisted, so after a restart tokens from pages opened before cannot be decrypted.
+// Antiforgery logs that as an error with an exception, also when it silently replaces the cookie of a page load.
+// ExpiredFormFilter logs a failed validation as a warning instead and asks the user to reload the page.
+builder.Logging.AddFilter("Microsoft.AspNetCore.Antiforgery", LogLevel.Critical);
+
 // Add services to the container and require authentication on all pages
 builder.Services.AddRazorPages(options =>
     {
         options.Conventions.AuthorizeFolder("/");
     })
-    .AddMvcOptions(options => options.Filters.Add<OnboardingPageFilter>());
+    .AddMvcOptions(options =>
+    {
+        options.Filters.Add<OnboardingPageFilter>();
+        options.Filters.Add<ExpiredFormFilter>();
+    });
 
 var app = builder.Build();
 

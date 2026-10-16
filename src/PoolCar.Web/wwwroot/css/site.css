@@ -272,6 +272,8 @@ fieldset { margin: 0; padding: 0; border: 0; }
 }
 .toast:hover, .toast:focus-within { animation-play-state: paused; }
 .toast-error { background: var(--color-red-500); }
+.toast-sticky { animation: none; }
+.toast-link { display: block; margin-top: 0.25rem; color: inherit; font-weight: 600; }
 .toast-message { flex: 1; margin: 0; }
 .toast-close { padding: 0 0.25rem; border: 0; background: none; color: inherit; font-size: 1.25rem; line-height: 1; cursor: pointer; }
 @keyframes toast-hide { to { opacity: 0; visibility: hidden; } }

@@ -8,8 +8,12 @@ public enum ToastKind
     Error,
 }
 
-/// <summary>A short message that disappears after a few seconds.</summary>
-public sealed record Toast(string Message, ToastKind Kind = ToastKind.Success)
+/// <summary>A link in a toast, for example to reload the page. It loads the full page, without htmx.</summary>
+public sealed record ToastLink(string Text, string Url);
+
+/// <summary>A short message that disappears after a few seconds. A toast with a link stays until it is closed, so
+/// there is time to follow the link. The link is not kept by <see cref="Store"/>.</summary>
+public sealed record Toast(string Message, ToastKind Kind = ToastKind.Success, ToastLink? Link = null)
 {
     /// <summary>Renders a single toast.</summary>
     public const string Partial = "_Toast";
@@ -22,7 +26,7 @@ public sealed record Toast(string Message, ToastKind Kind = ToastKind.Success)
 
     public static Toast Success(string message) => new(message, ToastKind.Success);
 
-    public static Toast Error(string message) => new(message, ToastKind.Error);
+    public static Toast Error(string message, ToastLink? link = null) => new(message, ToastKind.Error, link);
 
     /// <summary>Keeps the toast for the next page, for example after a redirect.</summary>
     public void Store(ITempDataDictionary tempData)
