@@ -20,6 +20,7 @@ PoolCar is an internal shared-car application. Web is the authenticated user ent
 - Restore local tools with `dotnet tool restore`, then install hooks with `dotnet husky install`.
 - Install gitleaks and the Bicep CLI before committing; the hook fails explicitly when they are unavailable.
 - Build with `dotnet build PoolCar.slnx`; run tests with `dotnet test PoolCar.slnx`; lint Bicep with `scripts/lint-bicep.sh`.
+- `dotnet husky run --group uncommitted` builds, checks formatting and lints Bicep for the uncommitted changes. The agent Stop hook in `.github/hooks/poolcar.json` (and `.claude/settings.json` for Claude Code) runs it when you end a turn and returns failures for you to fix.
 - Deploy by running the Deploy workflow with a deployment name.
 - Add a Reservations migration with `dotnet ef migrations add <Name> --project src/PoolCar.Reservations --output-dir Data/Migrations`.
 - End-to-end browser tests require Chromium. Install it with `pwsh tests/PoolCar.EndToEnd.Tests/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium`.

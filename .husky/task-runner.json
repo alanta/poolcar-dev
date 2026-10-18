@@ -1,5 +1,17 @@
 {
   "$schema": "https://alirezanet.github.io/Husky.Net/schema.json",
+  "variables": [
+    {
+      "name": "uncommitted",
+      "command": "sh",
+      "args": ["-c", "{ git diff --name-only HEAD; git ls-files --others --exclude-standard; } | sort -u"]
+    },
+    {
+      "name": "uncommitted-files",
+      "command": "sh",
+      "args": ["-c", "{ git diff --name-only --diff-filter=d HEAD; git ls-files --others --exclude-standard; } | sort -u"]
+    }
+  ],
   "tasks": [
     {
       "name": "Verify staged C# formatting",
@@ -22,6 +34,37 @@
       "group": "pre-commit",
       "command": "sh",
       "args": [".husky/check-secrets.sh"]
+    },
+    {
+      "name": "Build after uncommitted code changes",
+      "group": "uncommitted",
+      "command": "sh",
+      "args": [".husky/check-build.sh", "${uncommitted}"],
+      "include": [
+        "**/*.cs",
+        "**/*.cshtml",
+        "**/*.csproj",
+        "**/*.props",
+        "**/*.targets",
+        "**/*.slnx",
+        "**/.editorconfig",
+        "BannedSymbols.txt",
+        "global.json"
+      ]
+    },
+    {
+      "name": "Verify uncommitted C# formatting",
+      "group": "uncommitted",
+      "command": "sh",
+      "args": [".husky/check-format.sh", "${uncommitted-files}"],
+      "include": ["**/*.cs"]
+    },
+    {
+      "name": "Lint uncommitted Bicep files",
+      "group": "uncommitted",
+      "command": "sh",
+      "args": [".husky/check-bicep.sh", "${uncommitted-files}"],
+      "include": ["**/*.bicep"]
     }
   ]
 }
