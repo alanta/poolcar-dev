@@ -31,6 +31,7 @@ PoolCar is an internal shared-car application. Web is the authenticated user ent
 - Use Minimal APIs with `TypedResults`.
 - Keep domain code free of framework dependencies.
 - Use `TimeProvider` for time.
+- `BannedSymbols.txt` turns banned APIs, such as `DateTime.Now` and `Results`, into build errors (RS0030). Add a line there when a convention bans an API.
 - Bind service addresses to typed options, validate them at startup, and configure them in AppHost.
 - Keep HTMX progressively enhanced: forms work without JavaScript, use the vendored script, and include the antiforgery request header for requests.
 - Use the helpers in `src/PoolCar.Web/Htmx/` (`IsHtmx`, `PartialOrPage`, `HtmxRedirect`, `Toast`) and `src/PoolCar.Web/Formatting/` for dates, day parts, times and license plates.

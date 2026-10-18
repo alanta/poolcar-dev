@@ -96,6 +96,8 @@ dotnet test PoolCar.slnx
 dotnet format PoolCar.slnx --verify-no-changes
 ```
 
+The build fails on the APIs in `BannedSymbols.txt`, such as `DateTime.Now` and `Results`, because the code uses `TimeProvider` and `TypedResults` instead.
+
 The end-to-end test project uses Playwright. After building, install its Chromium browser with:
 
 ```sh

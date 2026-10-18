@@ -8,4 +8,8 @@
     <AnalysisLevel>latest</AnalysisLevel>
     <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
+  <ItemGroup>
+    <!-- Read by Microsoft.CodeAnalysis.BannedApiAnalyzers, which Directory.Packages.props adds to every project. -->
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)BannedSymbols.txt" />
+  </ItemGroup>
 </Project>

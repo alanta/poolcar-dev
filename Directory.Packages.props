@@ -4,6 +4,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Analyzers for every project. BannedSymbols.txt lists the APIs that break the conventions in AGENTS.md. -->
+    <GlobalPackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="5.6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Aspire -->
     <PackageVersion Include="Aspire.Hosting" Version="13.5.0" />
     <PackageVersion Include="Aspire.Hosting.Testing" Version="13.5.0" />

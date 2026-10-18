@@ -1,0 +1,6 @@
+P:System.DateTime.Now;Use TimeProvider so tests can control the time
+P:System.DateTime.UtcNow;Use TimeProvider so tests can control the time
+P:System.DateTime.Today;Use TimeProvider so tests can control the time
+P:System.DateTimeOffset.Now;Use TimeProvider so tests can control the time
+P:System.DateTimeOffset.UtcNow;Use TimeProvider so tests can control the time
+T:Microsoft.AspNetCore.Http.Results;Use TypedResults so endpoints declare their responses

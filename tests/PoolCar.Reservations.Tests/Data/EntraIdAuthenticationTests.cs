@@ -48,7 +48,7 @@ public class EntraIdAuthenticationTests(PostgresFixture postgres)
                 RequestedScopes.AddRange(requestContext.Scopes);
             }
 
-            return new AccessToken(token, DateTimeOffset.UtcNow.AddHours(1));
+            return new AccessToken(token, TimeProvider.System.GetUtcNow().AddHours(1));
         }
 
         public override ValueTask<AccessToken> GetTokenAsync(
