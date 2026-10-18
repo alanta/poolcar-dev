@@ -1,65 +1,56 @@
 # PoolCar agent guide
 
-PoolCar is an internal shared-car application. Web is the authenticated user entry point, Fleet owns fleet data, and Reservations owns booking data. Aspire AppHost wires the local services and PostgreSQL.
+PoolCar is an internal shared-car application. Web (Razor Pages + htmx) is the only user entry point and is signed in through EasyAuth. It calls two internal APIs over HTTP: Fleet (a read-only car catalog loaded from `src/PoolCar.Fleet/Data/fleet.json`) and Reservations (bookings and employees in PostgreSQL). Aspire AppHost wires them together locally. The README documents the API endpoints, the error codes, the seeded employees and deployment.
 
 ## Layout
 
-- `src/PoolCar.Web/` — Razor Pages UI, EasyAuth integration, and API clients. Web combines data from Fleet and Reservations.
-- `src/PoolCar.Fleet/` — Fleet API.
-- `src/PoolCar.Reservations/` — Reservations API.
-- `src/PoolCar.DbSetup/` — console tool that creates, migrates and seeds a deployment's PostgreSQL database in Azure and grants the Reservations identity data access.
-- `src/PoolCar.AppHost/` — local Aspire resources and service wiring.
-- `src/PoolCar.ServiceDefaults/` — shared telemetry, resilience, and health checks.
-- `tests/PoolCar.*.Tests/` — unit, API, web, and end-to-end tests.
-- `tests/PoolCar.ArchitectureTests/` — architecture rules.
+- `src/PoolCar.Web/`: pages in `Pages/` with Dutch route names, view models and logic in feature folders (`Planning/`, `Desk/`, ...), API clients in `Clients/`, and htmx and formatting helpers in `Htmx/` and `Formatting/`.
+- `src/PoolCar.Fleet/`, `src/PoolCar.Reservations/`: Minimal APIs split into `Domain/`, `Data/` and `Endpoints/`.
+- `src/PoolCar.DbSetup/`: Azure-only job that creates, migrates and seeds a deployment's database.
+- `src/PoolCar.AppHost/`, `src/PoolCar.ServiceDefaults/`: Aspire wiring and shared telemetry, resilience and health checks.
+- `tests/`: one test project per service, plus `ArchitectureTests` and `EndToEnd.Tests`.
 
 ## Run and test
 
-- Start local services with `scripts/run-local.sh` (`aspire run --isolated`); it prints `PoolCar web UI: <url>` when the EasyAuth proxy is healthy. Open that URL and sign in with a demo identity.
-- Never pin or assume ports: Aspire assigns them so worktrees can run side by side. Read the proxy URL with `aspire describe easyauth --apphost src/PoolCar.AppHost/PoolCar.AppHost.csproj --format Json`.
-- Restore local tools with `dotnet tool restore`, then install hooks with `dotnet husky install`.
-- Install gitleaks and the Bicep CLI before committing; the hook fails explicitly when they are unavailable.
-- Build with `dotnet build PoolCar.slnx`; run tests with `dotnet test PoolCar.slnx`; lint Bicep with `scripts/lint-bicep.sh`.
-- `dotnet husky run --group uncommitted` builds, checks formatting and lints Bicep for the uncommitted changes. The agent Stop hook in `.github/hooks/poolcar.json` (and `.claude/settings.json` for Claude Code) runs it when you end a turn and returns failures for you to fix.
-- Deploy by running the Deploy workflow with a deployment name.
-- Add a Reservations migration with `dotnet ef migrations add <Name> --project src/PoolCar.Reservations --output-dir Data/Migrations`.
-- End-to-end browser tests require Chromium. Install it with `pwsh tests/PoolCar.EndToEnd.Tests/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium`.
-- In a fresh Git worktree, restore tools, install hooks, build, and install the Playwright browser before running browser tests. PostgreSQL data is isolated per AppHost worktree.
+- In a fresh clone or worktree, run `dotnet tool restore && dotnet husky install`. Committing needs gitleaks, and the Bicep CLI when Bicep files are staged.
+- Start the app with `scripts/run-local.sh`; it prints `PoolCar web UI: <url>` once the EasyAuth proxy is healthy. Aspire assigns every port, so never hard-code one. Get the URL with `aspire describe easyauth --apphost src/PoolCar.AppHost/PoolCar.AppHost.csproj --format Json`.
+- To sign in on the proxy's form, enter any username, or a seeded employee ID from the README as the user ID. Enter `FleetOperator` in Roles for the operator pages (`/balie`).
+- Tests use Microsoft.Testing.Platform. Run one project with `dotnet test --project tests/PoolCar.Web.Tests` and filter with `--filter-method "*Name*"`. `dotnet test PoolCar.slnx` also runs the slow end-to-end tests.
+- The Reservations and DbSetup tests need Docker (Testcontainers). The end-to-end tests start the whole AppHost with an empty database and need Chromium: `pwsh tests/PoolCar.EndToEnd.Tests/bin/Debug/net10.0/playwright.ps1 install --with-deps chromium`.
+- `dotnet husky run --group uncommitted` builds, checks formatting and lints Bicep for the uncommitted changes. The agent Stop hook (`.github/hooks/poolcar.json`, and `.claude/settings.json` for Claude Code) runs it when you end a turn and returns failures for you to fix.
+- Add a Reservations migration with `dotnet ef migrations add <Name> --project src/PoolCar.Reservations --output-dir Data/Migrations`. Locally, Reservations migrates and seeds on startup (`Database:Migrate`); in Azure, DbSetup does that instead.
 
 ## Conventions
 
-- Write Dutch UI text and English code.
-- Use Minimal APIs with `TypedResults`.
-- Keep domain code free of framework dependencies.
-- Use `TimeProvider` for time.
-- `BannedSymbols.txt` turns banned APIs, such as `DateTime.Now` and `Results`, into build errors (RS0030). Add a line there when a convention bans an API.
-- Bind service addresses to typed options, validate them at startup, and configure them in AppHost.
-- Keep HTMX progressively enhanced: forms work without JavaScript, use the vendored script, and include the antiforgery request header for requests.
-- Use the helpers in `src/PoolCar.Web/Htmx/` (`IsHtmx`, `PartialOrPage`, `HtmxRedirect`, `Toast`) and `src/PoolCar.Web/Formatting/` for dates, day parts, times and license plates.
-- Run `dotnet format PoolCar.slnx --verify-no-changes` before completing a change.
+- Write UI text and API error messages in Dutch, and code in English.
+- Web never references the Fleet or Reservations projects; it uses the clients and contracts in `Clients/`. `ActingUserHandler` sends the signed-in employee to Reservations in the `X-PoolCar-Employee` and `X-PoolCar-Operator` headers.
+- API clients only retry reads, because a retried write could book a car twice.
+- Reservations domain methods return `Result`/`DomainError` instead of throwing. `Endpoints/ApiProblems.cs` maps them to problem details with a Dutch `detail` and a `code`, and Web reads them back as `ApiProblem`.
+- Keep `Domain/` free of EF Core and ASP.NET Core. The architecture tests enforce this.
+- Use `TimeProvider` (tests use `FakeTimeProvider`) and `TypedResults`. `BannedSymbols.txt` turns banned APIs into build errors (RS0030); add a line there when a convention bans an API.
+- Show dates and times in Europe/Amsterdam, using the helpers in `src/PoolCar.Web/Formatting/` for dates, day parts, times and license plates.
+- Bind service addresses to validated typed options and set them in AppHost.
+- Forms must work without JavaScript; htmx only enhances them. Use the vendored htmx in `wwwroot/lib/` and the helpers in `src/PoolCar.Web/Htmx/`.
 
 ## HTMX patterns
 
+Follow the existing example of each pattern. Paths are relative to `src/PoolCar.Web/`.
+
 | Pattern | Example |
 | --- | --- |
-| Detect htmx requests with `IsHtmx`, `IsHtmxBoosted` and `IsHtmxPartial`. | `src/PoolCar.Web/Htmx/HtmxRequestExtensions.cs` |
-| One handler returns a partial for htmx and the full page otherwise with `PartialOrPage`. | `Pages/Wagenpark.cshtml.cs` |
-| Filter forms use `hx-get` with `hx-push-url="true"` so the URL stays shareable. | `Pages/Planning.cshtml`, `Pages/Balie.cshtml` |
+| One handler returns a partial for htmx and the full page otherwise (`PartialOrPage`). | `Pages/Wagenpark.cshtml.cs` |
+| Filter forms use `hx-get` with `hx-push-url="true"`, so the URL stays shareable. | `Pages/Planning.cshtml`, `Pages/Balie.cshtml` |
 | Submit buttons use `hx-disabled-elt` and `hx-indicator` with a spinner. | `Pages/_ReservationCard.cshtml` |
-| Toasts are appended out of band to `#toasts` (`ToastResult`) or stored in TempData before a redirect. | `Pages/Shared/_ToastOob.cshtml`, `Pages/MijnReserveringen.cshtml.cs` |
+| Toasts are appended out of band to `#toasts` (`ToastResult`), or stored in TempData before a redirect. | `Pages/Shared/_ToastOob.cshtml`, `Pages/MijnReserveringen.cshtml.cs` |
 | `HtmxRedirect` sends `HX-Redirect` for htmx and a normal redirect otherwise. | `Pages/Nu.cshtml.cs` |
-| Inline confirmation swaps the card for a confirm variant; without JavaScript the page renders it. | `OnGetCancelAsync` in `Pages/MijnReserveringen.cshtml.cs` |
-| `409` and `422` partials are swapped in by `htmx.config.responseHandling`. | `wwwroot/js/site.js`, `Pages/Reserveren.cshtml.cs` |
-| A failed antiforgery check is an expired page: `ExpiredFormFilter` marks it, `/fout/400` shows a reload link or toast, and `site.js` swaps only 400s with `X-PoolCar-Expired`. | `ExpiredForms/ExpiredFormFilter.cs`, `Pages/Fout.cshtml` |
-| Polling with `hx-trigger="every 30s"` and `hx-sync`. | `Pages/_BalieBoard.cshtml` |
+| Inline confirmation swaps the card for a confirm variant; without JavaScript the page renders that variant. | `OnGetCancelAsync` in `Pages/MijnReserveringen.cshtml.cs` |
+| `409` and `422` responses are partials that `htmx.config.responseHandling` swaps in. | `wwwroot/js/site.js`, `Pages/Reserveren.cshtml.cs` |
+| A failed antiforgery check is shown as an expired page: `ExpiredFormFilter` marks it, `/fout/400` shows a reload link or toast, and `site.js` swaps only 400s with `X-PoolCar-Expired`. | `ExpiredForms/ExpiredFormFilter.cs`, `Pages/Fout.cshtml` |
+| Polling uses `hx-trigger="every 30s"` with `hx-sync`. | `Pages/_BalieBoard.cshtml` |
 | `hx-boost` and the antiforgery `RequestVerificationToken` header are set on `<body>`. | `Pages/Shared/_Layout.cshtml` |
-
-Paths without a prefix are relative to `src/PoolCar.Web/`.
 
 ## Definition of done
 
-- Build without warnings and pass formatting checks.
-- Add or update unit and API tests for behavior changes.
-- Add an end-to-end test for each new user flow.
-- To verify UI changes: run the app, use Playwright MCP to walk through the flow, then turn the walk-through into an end-to-end test following the existing ones.
-- Keep commits small and use clear messages.
+- The build has no warnings, formatting passes, and the tests for the changed projects pass.
+- Behavior changes have unit or API tests. Web page tests stub the APIs with `tests/PoolCar.Web.Tests/Support/StubHttpHandler.cs`.
+- Each new user flow has an end-to-end test: walk through it in the running app with the Playwright MCP server (`.mcp.json`), then write the test following the existing ones in `tests/PoolCar.EndToEnd.Tests/`.
