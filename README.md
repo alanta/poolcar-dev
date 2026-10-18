@@ -62,7 +62,7 @@ In Development the OpenAPI document is available at `/openapi/v1.json`.
 - Docker, for the local PostgreSQL resource and the Reservations database tests.
 - Gitleaks for the pre-commit secret scan. See the [gitleaks installation guide](https://github.com/gitleaks/gitleaks#installing).
 
-Node.js LTS is needed to run the Playwright MCP server in VS Code. PowerShell and Chromium are needed for browser tests.
+Node.js LTS is needed to run the Playwright MCP server. PowerShell and Chromium are needed for browser tests.
 
 ## Run locally
 
@@ -112,7 +112,7 @@ Open the repository in its Dev Container to get the .NET SDK, Aspire CLI, Docker
 
 ## Playwright MCP
 
-The pinned Playwright MCP server is configured in `.vscode/mcp.json`. Start the app with `scripts/run-local.sh`, open the EasyAuth proxy URL, and sign in with a demo user before exploring the app.
+The pinned Playwright MCP server is configured in `.mcp.json`, which VS Code, Copilot CLI, the GitHub Copilot app and Claude Code all read. Start the app with `scripts/run-local.sh`, open the EasyAuth proxy URL, and sign in with a demo user before exploring the app.
 
 ## Manual setup
 
