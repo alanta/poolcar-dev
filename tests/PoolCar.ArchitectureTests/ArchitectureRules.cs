@@ -34,11 +34,13 @@ public class ArchitectureRules
             .Check(Architecture);
     }
 
-    [Fact]
-    public void Fleet_domain_is_covered_by_the_domain_rule()
+    [Theory]
+    [InlineData("PoolCar.Fleet.Domain")]
+    [InlineData("PoolCar.Reservations.Domain")]
+    public void Domain_is_covered_by_the_domain_rule(string domainNamespace)
     {
         Types().That().HaveFullNameMatching(DomainTypes).GetObjects(Architecture)
-            .ShouldContain(t => t.Namespace.FullName == "PoolCar.Fleet.Domain");
+            .ShouldContain(t => t.Namespace.FullName == domainNamespace);
     }
 
     [Fact]
