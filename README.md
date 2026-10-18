@@ -61,6 +61,7 @@ In Development the OpenAPI document is available at `/openapi/v1.json`.
 - Aspire CLI 13.5 or later.
 - Docker, for the local PostgreSQL resource and the Reservations database tests.
 - Gitleaks for the pre-commit secret scan. See the [gitleaks installation guide](https://github.com/gitleaks/gitleaks#installing).
+- The Bicep CLI for the pre-commit lint of Bicep files. `az bicep install` is enough; the lint also looks in `~/.azure/bin`.
 
 Node.js LTS is needed to run the Playwright MCP server. PowerShell and Chromium are needed for browser tests.
 
@@ -94,6 +95,7 @@ Sample reservations are only created when `Seed:Reservations` is `true` and the 
 dotnet build PoolCar.slnx --configuration Release
 dotnet test PoolCar.slnx
 dotnet format PoolCar.slnx --verify-no-changes
+scripts/lint-bicep.sh
 ```
 
 The build fails on the APIs in `BannedSymbols.txt`, such as `DateTime.Now` and `Results`, because the code uses `TimeProvider` and `TypedResults` instead.
@@ -106,11 +108,11 @@ pwsh tests/PoolCar.EndToEnd.Tests/bin/Debug/net10.0/playwright.ps1 install --wit
 
 ## Git hooks
 
-Install the local tools and hooks with `dotnet tool restore && dotnet husky install`. Before a commit, the hook checks formatting on staged C# files and scans staged changes with `gitleaks`. The commit is blocked if gitleaks is missing; install it using the link above.
+Install the local tools and hooks with `dotnet tool restore && dotnet husky install`. Before a commit, the hook checks formatting on staged C# files, lints staged Bicep files with `scripts/lint-bicep.sh`, and scans staged changes with `gitleaks`. The commit is blocked if gitleaks is missing, or if Bicep files are staged and the Bicep CLI is missing; install them using the links above.
 
 ## Dev container
 
-Open the repository in its Dev Container to get the .NET SDK, Aspire CLI, Docker-in-Docker, and the supporting tools. The post-create script restores tools, installs the hooks and gitleaks, builds the solution, and installs the Playwright Chromium browser.
+Open the repository in its Dev Container to get the .NET SDK, Aspire CLI, Docker-in-Docker, and the supporting tools. The post-create script restores tools, installs the hooks, gitleaks and Bicep, builds the solution, and installs the Playwright Chromium browser.
 
 ## Playwright MCP
 

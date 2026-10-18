@@ -30,6 +30,24 @@ if ! command -v gitleaks >/dev/null 2>&1; then
     rm -rf "${TMP_DIR}"
 fi
 
+echo "==> Installing Bicep..."
+if ! command -v bicep >/dev/null 2>&1; then
+    case "$(uname -m)" in
+        aarch64|arm64) BICEP_ARCH="arm64" ;;
+        *) BICEP_ARCH="x64" ;;
+    esac
+
+    TMP_DIR="$(mktemp -d)"
+    curl -sSfL "https://github.com/Azure/bicep/releases/latest/download/bicep-linux-${BICEP_ARCH}" -o "${TMP_DIR}/bicep"
+    chmod +x "${TMP_DIR}/bicep"
+    if [ -w /usr/local/bin ]; then
+        mv "${TMP_DIR}/bicep" /usr/local/bin/bicep
+    else
+        sudo mv "${TMP_DIR}/bicep" /usr/local/bin/bicep
+    fi
+    rm -rf "${TMP_DIR}"
+fi
+
 echo "==> Building solution..."
 dotnet build
 

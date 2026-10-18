@@ -44,20 +44,12 @@ jobs:
 
       - name: Lint Bicep
         run: |
-          bicep="$RUNNER_TEMP/bicep"
-          curl -fsSLo "$bicep" https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
-          chmod +x "$bicep"
-          "$bicep" --version
-          shopt -s globstar
-          failed=0
-          for file in infra/**/*.bicep; do
-            output=$("$bicep" lint "$file" 2>&1) || failed=1
-            if [[ -n "$output" ]]; then
-              echo "$output"
-              failed=1
-            fi
-          done
-          exit $failed
+          mkdir -p "$RUNNER_TEMP/bicep"
+          curl -fsSLo "$RUNNER_TEMP/bicep/bicep" https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
+          chmod +x "$RUNNER_TEMP/bicep/bicep"
+          export PATH="$RUNNER_TEMP/bicep:$PATH"
+          bicep --version
+          scripts/lint-bicep.sh
 
   test:
     name: Test

@@ -10,6 +10,14 @@
       "filteringRule": "staged"
     },
     {
+      "name": "Lint staged Bicep files",
+      "group": "pre-commit",
+      "command": "sh",
+      "args": [".husky/check-bicep.sh", "${staged:\u001f}"],
+      "include": ["**/*.bicep"],
+      "filteringRule": "staged"
+    },
+    {
       "name": "Scan staged changes for secrets",
       "group": "pre-commit",
       "command": "sh",
