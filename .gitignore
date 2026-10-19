@@ -480,3 +480,6 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Personal Claude Code and Copilot settings
+.claude/settings.local.json

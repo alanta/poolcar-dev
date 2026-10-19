@@ -8,7 +8,7 @@ public static class DutchCalendar
     private static readonly CultureInfo Culture = CultureInfo.GetCultureInfo("nl-NL");
     private static readonly TimeZoneInfo Amsterdam = TimeZoneInfo.FindSystemTimeZoneById("Europe/Amsterdam");
 
-    public static DateTimeOffset Now => TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, Amsterdam);
+    public static DateTimeOffset Now => TimeZoneInfo.ConvertTime(TimeProvider.System.GetUtcNow(), Amsterdam);
 
     public static DateOnly Today => DateOnly.FromDateTime(Now.DateTime);
 
