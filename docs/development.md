@@ -71,6 +71,7 @@ The same checks run on your machine and in CI, so a change that passes locally p
 
 [Husky.Net](https://alirezanet.github.io/Husky.Net/) runs them in two groups, defined in `.husky/task-runner.json`:
 
+- The hooks are not installed automatically. Run `dotnet tool restore && dotnet husky install` once in each clone or worktree; until then Git runs no hooks. Set `HUSKY=0` to skip them temporarily.
 - `pre-commit` runs on every commit, for the staged files. It blocks the commit when gitleaks is missing, or when Bicep files are staged and the Bicep CLI is missing.
 - `uncommitted` runs the build, format, Bicep and link checks for everything changed since the last commit. Run it yourself with `dotnet husky run --group uncommitted`.
 

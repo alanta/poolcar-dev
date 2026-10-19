@@ -22,7 +22,7 @@ PoolCar is an internal shared-car application. Web (Razor Pages + htmx) is the o
 
 ## Run and test
 
-- In a fresh clone or worktree, run `dotnet tool restore && dotnet husky install`. Committing needs gitleaks, and the Bicep CLI when Bicep files are staged.
+- In a fresh clone or worktree, run `dotnet tool restore && dotnet husky install` once to enable the Git hooks (they are not installed automatically). Committing needs gitleaks, and the Bicep CLI when Bicep files are staged.
 - Start the app with `scripts/run-local.sh`; it prints `PoolCar web UI: <url>` once the EasyAuth proxy is healthy. Aspire assigns every port, so never hard-code one. On the sign-in form, enter any username; enter `FleetOperator` in Roles for the operator pages.
 - Tests use Microsoft.Testing.Platform: `dotnet test --project tests/PoolCar.Web.Tests --filter-method "*Name*"`. `dotnet test PoolCar.slnx` also runs the slow end-to-end tests. The Reservations, DbSetup and end-to-end tests need Docker.
 - `dotnet husky run --group uncommitted` builds, checks formatting, lints Bicep and checks Markdown links for the uncommitted changes. The agent Stop hook runs it when you end a turn and returns failures for you to fix.

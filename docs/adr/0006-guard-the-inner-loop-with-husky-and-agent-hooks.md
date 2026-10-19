@@ -54,7 +54,7 @@ Husky.Net (a local dotnet tool) defines every check once in `.husky/task-runner.
 * Agents fix problems before they report back
 
 **Con:**
-* Developers must install the hooks and the tools the checks need (gitleaks, the Bicep CLI)
+* Contributors need the .NET SDK and the tools the checks need (gitleaks, the Bicep CLI); each clone must run `dotnet husky install` once to enable the hooks
 * Agent hook formats differ per tool and change often
 
 ## Decision
