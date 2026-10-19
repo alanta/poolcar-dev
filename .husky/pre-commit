@@ -1,4 +1,7 @@
 #!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
+# Deliberately not sourcing .husky/_/husky.sh: `dotnet husky install` generates it and it is gitignored, so a fresh
+# clone or git worktree doesn't have it, and every commit there would fail until someone runs the install.
+[ "$HUSKY" = "0" ] && exit 0
 
+dotnet tool restore > /dev/null
 dotnet husky run --group pre-commit
