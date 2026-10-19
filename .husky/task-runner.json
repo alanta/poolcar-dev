@@ -30,6 +30,12 @@
       "filteringRule": "staged"
     },
     {
+      "name": "Check Markdown links",
+      "group": "pre-commit",
+      "command": "dotnet",
+      "args": ["run", "scripts/check-links.cs"]
+    },
+    {
       "name": "Scan staged changes for secrets",
       "group": "pre-commit",
       "command": "sh",
@@ -65,6 +71,12 @@
       "command": "sh",
       "args": [".husky/check-bicep.sh", "${uncommitted-files}"],
       "include": ["**/*.bicep"]
+    },
+    {
+      "name": "Check Markdown links",
+      "group": "uncommitted",
+      "command": "dotnet",
+      "args": ["run", "scripts/check-links.cs"]
     }
   ]
 }

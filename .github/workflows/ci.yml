@@ -42,6 +42,9 @@ jobs:
       - name: Verify code formatting
         run: dotnet format --verify-no-changes
 
+      - name: Check Markdown links
+        run: dotnet run scripts/check-links.cs
+
       - name: Lint Bicep
         run: |
           mkdir -p "$RUNNER_TEMP/bicep"
