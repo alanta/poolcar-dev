@@ -131,6 +131,8 @@ public partial class ReservePageTests(WebApplicationFactory<Program> factory) : 
         {
             html.ShouldContain("id=\"van\" name=\"van\" type=\"date\" value=\"2026-10-14\"");
             html.ShouldNotContain("hx-swap-oob");
+            html.ShouldContain("formnovalidate");
+            html.ShouldContain("hx-trigger=\"change, submit\" hx-sync=\"this:replace\"");
         }
     }
 

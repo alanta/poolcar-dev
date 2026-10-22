@@ -13,7 +13,7 @@
 
     <form id="@ReserverenModel.FormId" class="reserve-when section" method="get" action="/reserveren"
           hx-get="/reserveren" hx-target="#reserve-steps" hx-push-url="true"
-          hx-trigger="change delay:300ms, submit" hx-indicator="#reserve-when-spinner">
+          hx-trigger="change, submit" hx-sync="this:replace" hx-indicator="#reserve-when-spinner">
         <h2 class="visually-hidden">Wanneer en waar</h2>
         <div class="form-row">
             @if (Model.PreselectedCar is { } preselected)
@@ -53,7 +53,7 @@
         </fieldset>
 
         <div class="button-row">
-            <button type="submit" class="button button-dark">Toon vrije auto's</button>
+            <button type="submit" class="button button-dark" formnovalidate>Toon vrije auto's</button>
             <span id="reserve-when-spinner" class="spinner" aria-hidden="true"></span>
         </div>
     </form>

@@ -28,3 +28,5 @@ Follow the existing example of each pattern. Paths are relative to `src/PoolCar.
 | A failed antiforgery check is shown as an expired page: `ExpiredFormFilter` marks it, `/fout/400` shows a reload link or toast, and `site.js` swaps only 400s with `X-PoolCar-Expired`. | `ExpiredForms/ExpiredFormFilter.cs`, `Pages/Fout.cshtml` |
 | Polling uses `hx-trigger="every 30s"` with `hx-sync`. | `Pages/_BalieBoard.cshtml` |
 | `hx-boost` and the antiforgery `RequestVerificationToken` header are set on `<body>`. | `Pages/Shared/_Layout.cshtml` |
+
+The reservation date form replaces in-flight requests immediately on change, so older responses cannot overwrite newer date choices. Its submit button uses `formnovalidate` to let server-side validation handle an end-date minimum that is stale after editing the start date without JavaScript.
