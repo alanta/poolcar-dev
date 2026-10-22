@@ -1,0 +1,16 @@
+@model ReserverenModel
+@using PoolCar.Web.Htmx
+@{
+    var outOfBand = Context.Request.IsHtmxPartial();
+}
+@if (!outOfBand)
+{
+    <div class="form-field">
+        <label for="van">Van</label>
+        <input id="van" name="van" type="date" value="@Model.FromValue" min="@ReserverenModel.Format(Model.Today)" required />
+    </div>
+}
+<div id="reserve-to" class="form-field" hx-swap-oob="@(outOfBand ? "true" : null)">
+    <label for="tot">Tot en met</label>
+    <input id="tot" name="tot" type="date" value="@Model.ToValue" min="@ReserverenModel.Format(Model.From)" required />
+</div>

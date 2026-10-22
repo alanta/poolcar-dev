@@ -11,6 +11,29 @@ public class ReservationTests(PoolCarApp app) : EndToEndTest(app)
     private const string TakenCarPlate = "KSP73B";
 
     [Fact]
+    public async Task Later_start_date_updates_end_date_without_an_error_or_losing_focus()
+    {
+        var date = DutchCalendar.Iso(DutchCalendar.Today.AddDays(3));
+        await SignInAsync(SeededEmployees.Amsterdam);
+        await NavigateToAsync("Reserveren", "Auto reserveren");
+        var from = Page.GetByLabel("Van", new() { Exact = true });
+        var to = Page.GetByLabel("Tot en met");
+
+        await from.FillAsync(date);
+
+        await Expect(to).ToHaveValueAsync(date);
+        await Expect(to).ToHaveAttributeAsync("min", date);
+        await Expect(from).ToBeFocusedAsync();
+        await Expect(Page.GetByRole(AriaRole.Alert)).ToHaveCountAsync(0);
+        await Page.GetByRole(AriaRole.Region, new() { Name = "Kies een categorie" })
+            .GetByRole(AriaRole.Link, new() { Name = "Middel" })
+            .ClickAsync();
+        await Expect(Page.GetByRole(AriaRole.Heading, new() { Name = "Kies een auto" })).ToBeVisibleAsync();
+        await Expect(to).ToHaveValueAsync(date);
+        await Expect(to).ToHaveAttributeAsync("min", date);
+    }
+
+    [Fact]
     public async Task Employee_reserves_a_car_and_sees_it_in_the_planning()
     {
         var employee = SeededEmployees.Amsterdam;

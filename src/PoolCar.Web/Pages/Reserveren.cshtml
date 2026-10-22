@@ -36,14 +36,7 @@
                     </select>
                 </div>
             }
-            <div class="form-field">
-                <label for="van">Van</label>
-                <input id="van" name="van" type="date" value="@Model.FromValue" min="@ReserverenModel.Format(Model.Today)" required />
-            </div>
-            <div class="form-field">
-                <label for="tot">Tot en met</label>
-                <input id="tot" name="tot" type="date" value="@Model.ToValue" min="@ReserverenModel.Format(Model.Today)" required />
-            </div>
+            <partial name="_ReserveDates" model="Model" />
         </div>
 
         <fieldset class="reserve-day-part">

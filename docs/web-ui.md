@@ -17,6 +17,7 @@ Follow the existing example of each pattern. Paths are relative to `src/PoolCar.
 | Pattern | Example |
 | --- | --- |
 | One handler returns a partial for htmx and the full page otherwise (`PartialOrPage`). | `Pages/Wagenpark.cshtml.cs` |
+| Reservation end dates follow a later start date and cannot precede it. `_ReserveSteps` includes `_ReserveDates` out of band to update the end date and its minimum, leaving the start input untouched while editing. Full GETs apply the same rule without JavaScript. | `Pages/Reserveren.cshtml.cs`, `Pages/_ReserveDates.cshtml` |
 | Filter forms use `hx-get` with `hx-push-url="true"`, so the URL stays shareable. | `Pages/Planning.cshtml`, `Pages/Balie.cshtml` |
 | Submit buttons use `hx-disabled-elt` and `hx-indicator` with a spinner. | `Pages/_ReservationCard.cshtml` |
 | Toasts are appended out of band to `#toasts` (`ToastResult`), or stored in TempData before a redirect. | `Pages/Shared/_ToastOob.cshtml`, `Pages/MijnReserveringen.cshtml.cs` |

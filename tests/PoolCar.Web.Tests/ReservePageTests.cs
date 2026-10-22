@@ -74,7 +74,6 @@ public partial class ReservePageTests(WebApplicationFactory<Program> factory) : 
     }
 
     [Theory]
-    [InlineData("2026-10-14", "2026-10-13", "De einddatum ligt voor de begindatum. Kies een einddatum vanaf wo 14 okt.")]
     [InlineData("2026-10-13", "2026-10-27", "Je kan maximaal 14 dagen achter elkaar reserveren. Kies een kortere periode.")]
     [InlineData("2026-10-12", "2026-10-12", "Je kan niet in het verleden reserveren. Kies vandaag of later.")]
     [InlineData("13-10-2026", "2026-10-13", "Kies een geldige datum.")]
@@ -100,6 +99,39 @@ public partial class ReservePageTests(WebApplicationFactory<Program> factory) : 
         html.ShouldContain("Kies een categorie");
         var busy = _reservations.Requests.Where(r => r.Uri.AbsolutePath == "/availability/busy").ShouldHaveSingleItem();
         busy.Body!.ShouldContain("\"from\":\"2026-10-13\",\"to\":\"2026-10-26\",\"dayPart\":\"Morning\"");
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task LaterStartDate_MovesEndDateAndShowsAvailability(bool htmx)
+    {
+        using var client = CreateClient();
+        if (htmx)
+        {
+            client.DefaultRequestHeaders.Add("HX-Request", "true");
+            client.DefaultRequestHeaders.Add("HX-Trigger", "reserve-form");
+        }
+
+        var html = await client.GetStringAsync("/reserveren?van=2026-10-14&tot=2026-10-13&dagdeel=ochtend", Token);
+
+        html.ShouldNotContain("form-error");
+        html.ShouldContain("Kies een categorie");
+        html.ShouldContain("id=\"tot\" name=\"tot\" type=\"date\" value=\"2026-10-14\" min=\"2026-10-14\"");
+        var busy = _reservations.Requests.Where(r => r.Uri.AbsolutePath == "/availability/busy").ShouldHaveSingleItem();
+        busy.Body!.ShouldContain("\"from\":\"2026-10-14\",\"to\":\"2026-10-14\",\"dayPart\":\"Morning\"");
+        if (htmx)
+        {
+            html.ShouldContain("id=\"reserve-to\" class=\"form-field\" hx-swap-oob=\"true\"");
+            html.ShouldNotContain("id=\"van\"");
+            html.ShouldNotContain("autofocus");
+            html.ShouldNotContain("<html");
+        }
+        else
+        {
+            html.ShouldContain("id=\"van\" name=\"van\" type=\"date\" value=\"2026-10-14\"");
+            html.ShouldNotContain("hx-swap-oob");
+        }
     }
 
     [Fact]
@@ -149,6 +181,7 @@ public partial class ReservePageTests(WebApplicationFactory<Program> factory) : 
 
         html.ShouldContain("id=\"van\" name=\"van\" type=\"date\" value=\"2026-10-14\"");
         html.ShouldContain("id=\"tot\" name=\"tot\" type=\"date\" value=\"2026-10-15\"");
+        html.ShouldContain("value=\"2026-10-15\" min=\"2026-10-14\"");
         html.ShouldContain("value=\"middag\" checked=\"checked\"");
         html.ShouldContain("<input type=\"hidden\" name=\"categorie\" value=\"klein\" form=\"reserve-form\" />");
         html.ShouldContain("<input type=\"hidden\" name=\"auto\" value=\"AA11BB\" form=\"reserve-form\" />");

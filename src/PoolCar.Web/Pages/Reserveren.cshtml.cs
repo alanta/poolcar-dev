@@ -327,7 +327,7 @@ public class ReserverenModel(
         var fromValid = TryParse(FromText, out var from);
         var toValid = TryParse(ToText, out var to);
         From = fromValid ? from : ReservationDates.DefaultFrom(timeProvider);
-        To = toValid ? to : From;
+        To = toValid && to >= From ? to : From;
         DayPart = DayPartText.TryParseSlug(DayPartSlug, out var dayPart)
             ? dayPart
             : ReservationDates.DefaultDayPart(From, timeProvider);

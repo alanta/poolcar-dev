@@ -1,5 +1,6 @@
 @model ReserverenModel
 @using PoolCar.Web.Formatting
+@using PoolCar.Web.Htmx
 @{
     // After an htmx swap, focus the heading of the deepest step, except while the dates are being changed
     var focus = !Model.MoveFocus ? null
@@ -8,6 +9,10 @@
         : Model.SelectedCar is not null ? "confirm"
         : Model.SelectedCategoryName is not null ? "cars"
         : "categories";
+}
+@if (Context.Request.IsHtmxPartial())
+{
+    <partial name="_ReserveDates" model="Model" />
 }
 @if (!Model.IsPreselected && !string.IsNullOrEmpty(Model.Category))
 {
